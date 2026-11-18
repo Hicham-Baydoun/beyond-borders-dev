@@ -1,0 +1,28 @@
+# Render Blueprint: one free web service runs the API and serves the React app.
+# Database: the team's Neon PostgreSQL. Secrets are typed into Render's dashboard, never stored here.
+services:
+  - type: web
+    name: beyond-borders
+    runtime: node
+    plan: free
+    region: frankfurt # closest free region to Lebanon
+    autoDeploy: true # every merge to main redeploys
+    healthCheckPath: /api/v1/health
+    # --include=dev: Vite and Prisma CLI are dev dependencies but are needed to build.
+    # migrate deploy only applies migrations already committed in server/prisma/migrations.
+    buildCommand: >-
+      npm ci --include=dev &&
+      npm run build -w client &&
+      cd server && npx prisma generate && npx prisma migrate deploy
+    startCommand: npm start -w server
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false # Render asks for it on first deploy: paste the team Neon URL
+      - key: ENCRYPTION_KEY
+        sync: false # Render asks for it on first deploy: paste the team key

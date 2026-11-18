@@ -1,4 +1,6 @@
 // Builds the Express app (application layer, SRS Section 5.2).
+const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const env = require('./config/env');
@@ -7,6 +9,8 @@ const clock = require('./lib/clock');
 const sessionMiddleware = require('./middleware/session');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const modules = require('./modules');
+
+const CLIENT_DIST = path.resolve(__dirname, '..', '..', 'client', 'dist');
 
 function createApp() {
   const app = express();
@@ -43,6 +47,15 @@ function createApp() {
   }
 
   app.use('/api/v1', api);
+
+  // In production one server hosts both: the API above and the built React app (client/dist).
+  // Same origin means the session cookie works without any CORS setup.
+  if (env.NODE_ENV === 'production' && fs.existsSync(CLIENT_DIST)) {
+    app.use(express.static(CLIENT_DIST, { index: false, maxAge: '1h' }));
+    // Any other GET outside /api is a React route: send index.html and let React Router handle it.
+    app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+  }
+
   app.use(notFoundHandler);
   app.use(errorHandler);
   return app;
