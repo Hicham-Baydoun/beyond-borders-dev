@@ -96,8 +96,10 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          # -m includes changes made in merge commits. Custom log-opts replace gitleaks' defaults,
+          # so the push scan restates full history across all refs.
           if [ -n "$BASE_SHA" ]; then
-            gitleaks git --redact --verbose --log-opts="$BASE_SHA..$HEAD_SHA" .
+            gitleaks git --redact --verbose --log-opts="-m --full-history $BASE_SHA..$HEAD_SHA" .
           else
-            gitleaks git --redact --verbose .
+            gitleaks git --redact --verbose --log-opts="-m --full-history --all" .
           fi

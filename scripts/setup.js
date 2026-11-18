@@ -88,6 +88,15 @@ function cleanKey(raw) {
   return /^[0-9a-fA-F]{64}$/.test(key) ? key.toLowerCase() : null;
 }
 
+// 0600: only your user can read files that hold the secrets. No effect on Windows; a missing file is fine.
+function restrictToOwner(file) {
+  try {
+    fs.chmodSync(file, 0o600);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+  }
+}
+
 // Reads/copies directly and handles ENOENT instead of checking existsSync first,
 // so there is no gap where the file could change between the check and the use.
 function writeEnv(databaseUrl, encryptionKey) {
@@ -104,13 +113,16 @@ function writeEnv(databaseUrl, encryptionKey) {
     .replace(/^ENCRYPTION_KEY=.*$/m, () => `ENCRYPTION_KEY=${encryptionKey}`)
     .replace(/^SESSION_SECRET=.*$/m, () => `SESSION_SECRET=${crypto.randomBytes(36).toString('base64url')}`);
 
+  const backupPath = `${ENV_PATH}.backup`;
   try {
-    fs.copyFileSync(ENV_PATH, `${ENV_PATH}.backup`);
+    fs.copyFileSync(ENV_PATH, backupPath);
+    restrictToOwner(backupPath);
     console.log(`  Your old server/.env was saved as server/.env.backup`);
   } catch (err) {
     if (err.code !== 'ENOENT') throw err; // no old .env: nothing to back up
   }
-  // 0o600: only your user can read the file that holds the secrets (ignored on Windows).
+  // The mode option only applies when the file is created, so tighten an existing file first.
+  restrictToOwner(ENV_PATH);
   fs.writeFileSync(ENV_PATH, env, { mode: 0o600 });
 }
 
