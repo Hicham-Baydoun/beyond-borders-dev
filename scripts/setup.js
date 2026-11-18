@@ -36,35 +36,55 @@ function hasCommand(cmd) {
   return spawnSync(`${cmd} --version`, { stdio: 'ignore', shell: true }).status === 0;
 }
 
-// Reads all answers up front so piped input works too.
+// Buffers answers so piped input works too. Once input has ended (Ctrl+D, closed pipe),
+// buffered answers are still returned, and further questions reject instead of waiting forever.
 function createPrompter() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   const lines = [];
   const waiters = [];
-  rl.on('line', (line) => (waiters.length ? waiters.shift()(line) : lines.push(line)));
-  rl.on('close', () => waiters.splice(0).forEach((w) => w('')));
+  let closed = false;
+  rl.on('line', (line) => (waiters.length ? waiters.shift().resolve(line) : lines.push(line)));
+  rl.on('close', () => {
+    closed = true;
+    waiters.splice(0).forEach((w) => w.reject(new Error('Input ended before all values were entered.')));
+  });
   return {
     ask(question) {
       process.stdout.write(question);
-      return new Promise((resolve) => (lines.length ? resolve(lines.shift()) : waiters.push(resolve)));
+      if (lines.length) return Promise.resolve(lines.shift());
+      if (closed) return Promise.reject(new Error('Input ended before all values were entered.'));
+      return new Promise((resolve, reject) => waiters.push({ resolve, reject }));
     },
     close: () => rl.close(),
   };
 }
 
+// Accepts `value`, `"value"`, `'value'` and `NAME=value` (as copied from a .env file).
+function unwrap(raw, name) {
+  let value = raw.trim();
+  if (value.startsWith(`${name}=`)) value = value.slice(name.length + 1).trim();
+  const quoted = value.length >= 2 && (value[0] === '"' || value[0] === "'") && value.at(-1) === value[0];
+  return quoted ? value.slice(1, -1).trim() : value;
+}
+
 function cleanDatabaseUrl(raw) {
-  let url = raw.trim().replace(/^["']|["']$/g, '');
-  if (url.startsWith('DATABASE_URL=')) url = url.slice('DATABASE_URL='.length);
+  let url;
+  try {
+    url = new URL(unwrap(raw, 'DATABASE_URL'));
+  } catch {
+    return null;
+  }
+  const looksRight =
+    ['postgres:', 'postgresql:'].includes(url.protocol) && url.username && url.password && url.hostname && url.pathname.length > 1;
+  if (!looksRight) return null;
   // Prisma's driver does not support channel_binding; SSL stays on through sslmode=require.
-  url = url.replace(/[&?]channel_binding=[^&]*/g, '');
-  if (!/^postgres(ql)?:\/\/[^:]+:[^@]+@[^/]+\/\w+/.test(url)) return null;
-  if (!/sslmode=require/.test(url)) url += (url.includes('?') ? '&' : '?') + 'sslmode=require';
-  return url;
+  url.searchParams.delete('channel_binding');
+  url.searchParams.set('sslmode', 'require');
+  return url.toString();
 }
 
 function cleanKey(raw) {
-  let key = raw.trim().replace(/^["']|["']$/g, '');
-  if (key.startsWith('ENCRYPTION_KEY=')) key = key.slice('ENCRYPTION_KEY='.length);
+  const key = unwrap(raw, 'ENCRYPTION_KEY');
   return /^[0-9a-fA-F]{64}$/.test(key) ? key.toLowerCase() : null;
 }
 
@@ -79,9 +99,10 @@ function writeEnv(databaseUrl, encryptionKey) {
     throw err;
   }
   env = env
-    .replace(/^DATABASE_URL=.*$/m, `DATABASE_URL=${databaseUrl}`)
-    .replace(/^ENCRYPTION_KEY=.*$/m, `ENCRYPTION_KEY=${encryptionKey}`)
-    .replace(/^SESSION_SECRET=.*$/m, `SESSION_SECRET=${crypto.randomBytes(36).toString('base64url')}`);
+    // Callbacks insert the values literally: a password containing "$&" or "$1" must not be rewritten.
+    .replace(/^DATABASE_URL=.*$/m, () => `DATABASE_URL=${databaseUrl}`)
+    .replace(/^ENCRYPTION_KEY=.*$/m, () => `ENCRYPTION_KEY=${encryptionKey}`)
+    .replace(/^SESSION_SECRET=.*$/m, () => `SESSION_SECRET=${crypto.randomBytes(36).toString('base64url')}`);
 
   try {
     fs.copyFileSync(ENV_PATH, `${ENV_PATH}.backup`);
@@ -161,4 +182,6 @@ ${green(bold('All set!'))}
 `);
 }
 
-main().catch((err) => fail(err.message));
+if (require.main === module) main().catch((err) => fail(err.message));
+
+module.exports = { cleanDatabaseUrl, cleanKey };

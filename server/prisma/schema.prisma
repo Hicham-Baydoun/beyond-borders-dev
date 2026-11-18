@@ -318,7 +318,7 @@ model Review {
   id        Int      @id @default(autoincrement())
   bookingId Int      @unique // one review per booking (BR-06)
   booking   Booking  @relation(fields: [bookingId], references: [id])
-  rating    Int // 1..5, checked by Zod and a DB constraint added in migration
+  rating    Int // 1..5, checked by Zod and the review_rating_check constraint (migration 20261118210000)
   comment   String?  @db.VarChar(1000)
   hidden    Boolean  @default(false)
   createdAt DateTime @default(now())

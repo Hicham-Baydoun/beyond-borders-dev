@@ -82,7 +82,22 @@ jobs:
       # Fails on critical issues. Raise to "high" once zod, nodemailer and node-cron are upgraded.
       - name: Block critical vulnerabilities
         run: npm audit --omit=dev --audit-level=critical
-      - name: Scan for committed secrets
-        uses: gitleaks/gitleaks-action@v2
+      # Gitleaks CLI with an explicit commit range: every commit in the PR (base..head), whatever
+      # the count; on pushes to main, the whole history. Settings come from .gitleaks.toml.
+      - name: Install gitleaks
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.30.0
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Scan for committed secrets
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -n "$BASE_SHA" ]; then
+            gitleaks git --redact --verbose --log-opts="$BASE_SHA..$HEAD_SHA" .
+          else
+            gitleaks git --redact --verbose .
+          fi

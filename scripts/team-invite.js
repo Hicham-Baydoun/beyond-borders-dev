@@ -15,7 +15,12 @@ try {
 }
 const get = (key) => (env.match(new RegExp(`^${key}=(.*)$`, 'm')) || [])[1]?.trim();
 const databaseUrl = get('DATABASE_URL');
-const encryptionKey = get('ENCRYPTION_KEY');
+const encryptionKey = get('ENCRYPTION_KEY')?.replace(/^["']|["']$/g, '').toLowerCase();
+
+if (!/^[0-9a-f]{64}$/.test(encryptionKey ?? '')) {
+  console.error('ENCRYPTION_KEY in server/.env is missing or not 64 hex characters. Set the shared team key there, then run npm run team:invite again.');
+  process.exit(1);
+}
 
 if (!databaseUrl || /localhost|127\.0\.0\.1/.test(databaseUrl)) {
   console.error('server/.env points to a local database, not the shared Neon one. Nothing to share.');

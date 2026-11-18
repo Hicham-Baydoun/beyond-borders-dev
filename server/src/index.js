@@ -14,10 +14,27 @@ const server = app.listen(env.PORT, () => {
   console.log(`BBTMS API listening on http://localhost:${env.PORT}/api/v1`);
 });
 
-async function shutdown() {
-  server.close();
-  await prisma.$disconnect();
-  process.exit(0);
+// Graceful shutdown: stop taking new requests, let running ones finish, then close the database.
+// A deadline makes sure a stuck request cannot keep the process alive forever.
+const SHUTDOWN_DEADLINE_MS = 10_000;
+let shuttingDown = false;
+
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`${signal} received, shutting down`);
+
+  const deadline = setTimeout(() => {
+    console.error('Shutdown took too long, forcing exit');
+    process.exit(1);
+  }, SHUTDOWN_DEADLINE_MS);
+  deadline.unref();
+
+  server.close(async (err) => {
+    await prisma.$disconnect().catch(() => {});
+    process.exit(err ? 1 : 0);
+  });
+  server.closeIdleConnections?.();
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));

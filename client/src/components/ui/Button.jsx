@@ -7,7 +7,8 @@ import { cx } from './cx.js';
 
 const variants = {
   primary: 'bg-primary-700 text-white hover:bg-primary-800 active:bg-primary-900 shadow-sm',
-  accent: 'bg-accent-500 text-white hover:bg-accent-600 active:bg-accent-700 shadow-sm',
+  // accent-700 and darker keep white text above 4.5:1 contrast (WCAG AA).
+  accent: 'bg-accent-700 text-white hover:bg-accent-800 active:bg-accent-900 shadow-sm',
   secondary: 'bg-white text-slate-800 ring-1 ring-inset ring-slate-300 hover:bg-slate-50',
   ghost: 'text-slate-700 hover:bg-slate-100',
   danger: 'bg-danger-600 text-white hover:bg-danger-700 shadow-sm',

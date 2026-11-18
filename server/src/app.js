@@ -4,6 +4,8 @@ const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
+const { z } = require('zod');
+const validate = require('./middleware/validate');
 const env = require('./config/env');
 const prisma = require('./lib/prisma');
 const clock = require('./lib/clock');
@@ -48,10 +50,15 @@ function createApp() {
     }
   });
 
-  // Staging-only clock control (SRS Section 9.2)
+  // Staging-only clock control (SRS Section 9.2). env.js refuses to start production with it on.
+  // Body: { "reset": true } or { "now": "2027-06-01T09:00:00Z" }
   if (env.ALLOW_CLOCK_CONTROL) {
-    api.post('/test/clock', (req, res) => {
-      if (req.body?.reset) clock.reset();
+    const clockCommand = z.union([
+      z.object({ reset: z.literal(true) }).strict(),
+      z.object({ now: z.string().datetime({ offset: true }) }).strict(),
+    ]);
+    api.post('/test/clock', validate({ body: clockCommand }), (req, res) => {
+      if ('reset' in req.body) clock.reset();
       else clock.setNow(req.body.now);
       res.json({ now: clock.now() });
     });
@@ -62,13 +69,16 @@ function createApp() {
   }
 
   app.use('/api/v1', api);
+  // Unknown API addresses get a JSON 404, never the React page. Express paths are
+  // case-insensitive, so this also catches /API/... before the fallback below.
+  app.use('/api', notFoundHandler);
 
   // In production one server hosts both: the API above and the built React app (client/dist).
   // Same origin means the session cookie works without any CORS setup.
   if (env.NODE_ENV === 'production' && fs.existsSync(CLIENT_DIST)) {
     app.use(express.static(CLIENT_DIST, { index: false, maxAge: '1h' }));
-    // Any other GET outside /api is a React route: send index.html and let React Router handle it.
-    app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
+    // Any other GET is a React route (/api was handled above): send index.html, React Router takes over.
+    app.get('*', (_req, res) => res.sendFile(path.join(CLIENT_DIST, 'index.html')));
   }
 
   app.use(notFoundHandler);

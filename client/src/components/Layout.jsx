@@ -88,9 +88,9 @@ export default function Layout() {
               </>
             )}
           </div>
-          <button
-            type="button"
-            className="-mr-2 inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-700 hover:bg-slate-100 md:hidden"
+          <Button
+            variant="ghost"
+            className="-mr-2 w-11 px-0 md:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -99,7 +99,7 @@ export default function Layout() {
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
             </svg>
-          </button>
+          </Button>
         </nav>
         {menuOpen && (
           <div id="mobile-menu" className="animate-fade-in border-t border-slate-200 bg-white md:hidden">

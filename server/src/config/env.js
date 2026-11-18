@@ -4,7 +4,13 @@ const { z } = require('zod');
 
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().default(4000),
+  // Default only when unset; a blank or bad value fails at startup instead of becoming port 0.
+  PORT: z
+    .string()
+    .regex(/^\d+$/, 'must be a whole number')
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(65535))
+    .default('4000'),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(32),
   ENCRYPTION_KEY: z.string().regex(/^[0-9a-fA-F]{64}$/, 'must be 64 hex characters'),

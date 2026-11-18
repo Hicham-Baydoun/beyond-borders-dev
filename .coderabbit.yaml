@@ -34,7 +34,7 @@ reviews:
       instructions: |
         Check schema and migration changes for data loss (dropped columns or tables, NOT NULL added without a default).
         Remind the author that only one person runs migrations on the shared Neon database.
-    - path: "server/**/__tests__/**"
+    - path: "server/{tests,src/**/__tests__}/**"
       instructions: "Tests must use the local bbtms_test database and the clock helper to move time, never the shared database or real waits."
     - path: "client/src/**/*.{js,jsx}"
       instructions: |

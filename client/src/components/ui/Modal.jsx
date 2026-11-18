@@ -1,8 +1,9 @@
 // Accessible dialog on the native <dialog> element: focus trap, Esc to close and a backdrop for free.
+// dismissible={false} blocks Esc and backdrop clicks, for example while an action is running.
 import { useEffect, useId, useRef } from 'react';
 import Button from './Button.jsx';
 
-export default function Modal({ open, onClose, title, children, footer }) {
+export default function Modal({ open, onClose, title, children, footer, dismissible = true }) {
   const ref = useRef(null);
   const titleId = useId();
 
@@ -16,8 +17,13 @@ export default function Modal({ open, onClose, title, children, footer }) {
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
-      onClick={(e) => e.target === ref.current && onClose?.()}
+      // Esc fires "cancel" before the dialog closes; stop it and let React decide via onClose.
+      onCancel={(e) => {
+        e.preventDefault();
+        if (dismissible) onClose?.();
+      }}
+      // Mouse down (not click) on the backdrop, so dragging out of a text field doesn't close the dialog.
+      onMouseDown={(e) => dismissible && e.target === ref.current && onClose?.()}
       aria-labelledby={titleId}
       className="w-[calc(100%-2rem)] max-w-lg rounded-2xl p-0 shadow-2xl backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm open:animate-fade-in"
     >
@@ -36,7 +42,8 @@ export default function Modal({ open, onClose, title, children, footer }) {
   );
 }
 
-// For cancel and refund actions: nothing happens until the user confirms.
+// For cancel and refund actions: nothing happens until the user confirms,
+// and the dialog cannot be dismissed while the action is running.
 export function ConfirmDialog({
   open,
   onCancel,
@@ -52,6 +59,7 @@ export function ConfirmDialog({
     <Modal
       open={open}
       onClose={onCancel}
+      dismissible={!loading}
       title={title}
       footer={
         <>
