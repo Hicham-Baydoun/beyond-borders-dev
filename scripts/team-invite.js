@@ -5,12 +5,14 @@ const fs = require('fs');
 const path = require('path');
 
 const envPath = path.resolve(__dirname, '..', 'server', '.env');
-if (!fs.existsSync(envPath)) {
+let env;
+try {
+  env = fs.readFileSync(envPath, 'utf8');
+} catch (err) {
+  if (err.code !== 'ENOENT') throw err;
   console.error('server/.env not found. Run this on the machine that is already set up.');
   process.exit(1);
 }
-
-const env = fs.readFileSync(envPath, 'utf8');
 const get = (key) => (env.match(new RegExp(`^${key}=(.*)$`, 'm')) || [])[1]?.trim();
 const databaseUrl = get('DATABASE_URL');
 const encryptionKey = get('ENCRYPTION_KEY');

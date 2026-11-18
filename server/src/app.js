@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
+const { rateLimit } = require('express-rate-limit');
 const env = require('./config/env');
 const prisma = require('./lib/prisma');
 const clock = require('./lib/clock');
@@ -14,8 +15,22 @@ const CLIENT_DIST = path.resolve(__dirname, '..', '..', 'client', 'dist');
 
 function createApp() {
   const app = express();
-  app.set('trust proxy', 1); // behind Nginx in production
+  app.set('trust proxy', 1); // one proxy in front (Render or Nginx), so req.ip is the real client
   app.use(helmet());
+
+  // Basic flood protection for every route, applied before sessions so floods never reach the database.
+  // Stricter limits for login and password reset belong to M1 (FR-ACC).
+  app.use(
+    rateLimit({
+      windowMs: 60 * 1000,
+      limit: 300, // per IP per minute: far above normal use, low enough to stop scripts
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      skip: () => env.NODE_ENV === 'test',
+      handler: (_req, res) =>
+        res.status(429).json({ error: 'Too many requests from your network. Wait a minute, then try again.' }),
+    }),
+  );
 
   // Keep the raw body: the payment webhook needs it to check the gateway signature (FR-PAY-03).
   app.use(express.json({ limit: '1mb', verify: (req, _res, buf) => { req.rawBody = buf; } }));

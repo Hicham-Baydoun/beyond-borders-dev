@@ -68,20 +68,29 @@ function cleanKey(raw) {
   return /^[0-9a-fA-F]{64}$/.test(key) ? key.toLowerCase() : null;
 }
 
+// Reads/copies directly and handles ENOENT instead of checking existsSync first,
+// so there is no gap where the file could change between the check and the use.
 function writeEnv(databaseUrl, encryptionKey) {
-  if (!fs.existsSync(EXAMPLE_PATH)) fail('server/.env.example is missing. Pull the latest code first (git pull).');
-  let env = fs.readFileSync(EXAMPLE_PATH, 'utf8');
+  let env;
+  try {
+    env = fs.readFileSync(EXAMPLE_PATH, 'utf8');
+  } catch (err) {
+    if (err.code === 'ENOENT') fail('server/.env.example is missing. Pull the latest code first (git pull).');
+    throw err;
+  }
   env = env
     .replace(/^DATABASE_URL=.*$/m, `DATABASE_URL=${databaseUrl}`)
     .replace(/^ENCRYPTION_KEY=.*$/m, `ENCRYPTION_KEY=${encryptionKey}`)
     .replace(/^SESSION_SECRET=.*$/m, `SESSION_SECRET=${crypto.randomBytes(36).toString('base64url')}`);
 
-  if (fs.existsSync(ENV_PATH)) {
-    const backup = `${ENV_PATH}.backup`;
-    fs.copyFileSync(ENV_PATH, backup);
+  try {
+    fs.copyFileSync(ENV_PATH, `${ENV_PATH}.backup`);
     console.log(`  Your old server/.env was saved as server/.env.backup`);
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err; // no old .env: nothing to back up
   }
-  fs.writeFileSync(ENV_PATH, env);
+  // 0o600: only your user can read the file that holds the secrets (ignored on Windows).
+  fs.writeFileSync(ENV_PATH, env, { mode: 0o600 });
 }
 
 function checkDatabase() {
