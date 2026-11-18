@@ -1,0 +1,22 @@
+# Local development services (free, open source - SRS Section 6.7)
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: bbtms
+      POSTGRES_PASSWORD: bbtms
+      POSTGRES_DB: bbtms
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Catches every email sent in development (SRS Section 9.2)
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports:
+      - "127.0.0.1:1025:1025" # SMTP (this machine only)
+      - "127.0.0.1:8025:8025" # Web UI -> http://localhost:8025
+
+volumes:
+  pgdata:

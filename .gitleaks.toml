@@ -1,0 +1,7 @@
+# Secret-scanner settings. Uses the default rules and skips files that only hold sample values.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Sample config with placeholder values, never real secrets"
+paths = ['''server/\.env\.example''']

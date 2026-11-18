@@ -1,0 +1,381 @@
+// BBTMS data model - follows SRS Appendix B (Table 193) and Section 7.6.
+// Money is stored as Decimal(10,2); every price/payment carries a currency (Section 8.2).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum AccountStatus {
+  UNCONFIRMED
+  ACTIVE
+  DEACTIVATED
+}
+
+enum StaffRole {
+  AGENT
+  ADMINISTRATOR
+}
+
+enum CatalogStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum DepartureStatus {
+  OPEN // "Full" is calculated, never stored (Section 7.5.3)
+  DEPARTED
+  CANCELLED
+}
+
+enum PromotionType {
+  SEASONAL_PRICE // value = price per person
+  DISCOUNT // value = percentage
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  EXPIRED
+  CANCELLED
+  REFUNDED
+  COMPLETED
+}
+
+enum BookingChannel {
+  ONLINE // 15-minute hold
+  AGENT // 24-hour hold
+}
+
+enum PaymentType {
+  PAYMENT
+  REFUND
+}
+
+enum PaymentMethod {
+  CARD
+  CASH
+  BANK_TRANSFER
+}
+
+enum RefundStatus {
+  PENDING
+  COMPLETED
+}
+
+enum DocumentType {
+  E_TICKET
+  HOTEL_VOUCHER
+  TRANSFER_VOUCHER
+  OTHER
+}
+
+enum TokenPurpose {
+  CONFIRM_EMAIL // 24 h, FR-ACC-02
+  RESET_PASSWORD // 30 min, FR-ACC-05
+  SET_PASSWORD // new staff / agent-created customers
+}
+
+enum EmailStatus {
+  WAITING
+  SENT
+  FAILED
+}
+
+// ---------- Users (M1, M7) ----------
+
+model Customer {
+  id               Int           @id @default(autoincrement())
+  fullName         String
+  email            String        @unique
+  phone            String
+  phoneDigits      String // normalized digits for search (FR-CUS-02)
+  passwordHash     String?       // null until an agent-created customer sets a password
+  status           AccountStatus @default(UNCONFIRMED)
+  failedLoginCount Int           @default(0)
+  lockedUntil      DateTime?
+  createdByStaffId Int?
+  createdByStaff   StaffUser?    @relation("CustomerCreatedBy", fields: [createdByStaffId], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  bookings Booking[]
+  tokens   AuthToken[]
+
+  @@index([phoneDigits])
+  @@map("customer")
+}
+
+model StaffUser {
+  id               Int           @id @default(autoincrement())
+  fullName         String
+  email            String        @unique
+  passwordHash     String?
+  role             StaffRole
+  status           AccountStatus @default(ACTIVE)
+  failedLoginCount Int           @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  customersCreated Customer[]       @relation("CustomerCreatedBy")
+  bookingsCreated  Booking[]        @relation("BookingCreatedBy")
+  paymentsRecorded Payment[]        @relation("PaymentRecordedBy")
+  documents        TravelDocument[]
+  tokens           AuthToken[]
+
+  @@map("staff_user")
+}
+
+model AuthToken {
+  id         Int          @id @default(autoincrement())
+  purpose    TokenPurpose
+  tokenHash  String       @unique // SHA-256 of the token sent by email
+  expiresAt  DateTime
+  usedAt     DateTime?
+  customerId Int?
+  customer   Customer?    @relation(fields: [customerId], references: [id])
+  staffId    Int?
+  staff      StaffUser?   @relation(fields: [staffId], references: [id])
+  createdAt  DateTime     @default(now())
+
+  @@map("auth_token")
+}
+
+// ---------- Catalog (M2) ----------
+
+model Destination {
+  id          Int           @id @default(autoincrement())
+  name        String
+  country     String
+  description String
+  status      CatalogStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  photos   Photo[]
+  packages Package[]
+
+  @@map("destination")
+}
+
+model Photo {
+  id            Int         @id @default(autoincrement())
+  destinationId Int
+  destination   Destination @relation(fields: [destinationId], references: [id])
+  filePath      String
+
+  @@map("photo")
+}
+
+model Package {
+  id               Int           @id @default(autoincrement())
+  destinationId    Int
+  destination      Destination   @relation(fields: [destinationId], references: [id])
+  title            String
+  description      String
+  durationDays     Int
+  pricePerPerson   Decimal       @db.Decimal(10, 2)
+  currency         String        @default("USD")
+  includedServices String
+  status           CatalogStatus @default(ACTIVE)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  departures Departure[]
+  promotions Promotion[]
+
+  @@index([destinationId])
+  @@index([pricePerPerson])
+  @@map("package")
+}
+
+model Promotion {
+  id        Int           @id @default(autoincrement())
+  packageId Int
+  package   Package       @relation(fields: [packageId], references: [id])
+  name      String
+  type      PromotionType
+  value     Decimal       @db.Decimal(10, 2)
+  startDate DateTime      @db.Date
+  endDate   DateTime      @db.Date
+
+  @@index([packageId])
+  @@map("promotion")
+}
+
+model Departure {
+  id            Int             @id @default(autoincrement())
+  packageId     Int
+  package       Package         @relation(fields: [packageId], references: [id])
+  departureDate DateTime        @db.Date
+  returnDate    DateTime        @db.Date
+  totalPlaces   Int
+  status        DepartureStatus @default(OPEN)
+  cancelReason  String?
+
+  bookings Booking[]
+
+  @@index([departureDate])
+  @@index([packageId])
+  @@map("departure")
+}
+
+// ---------- Booking (M4) ----------
+
+model Booking {
+  id               Int            @id @default(autoincrement())
+  reference        String         @unique @db.Char(6) // FR-BKG-04
+  customerId       Int
+  customer         Customer       @relation(fields: [customerId], references: [id])
+  departureId      Int
+  departure        Departure      @relation(fields: [departureId], references: [id])
+  channel          BookingChannel
+  createdByStaffId Int?
+  createdByStaff   StaffUser?     @relation("BookingCreatedBy", fields: [createdByStaffId], references: [id])
+  status           BookingStatus  @default(PENDING)
+  pricePerPerson   Decimal        @db.Decimal(10, 2) // frozen at creation (BR-01)
+  totalPrice       Decimal        @db.Decimal(10, 2)
+  currency         String         @default("USD")
+  holdUntil        DateTime
+  cancelReason     String?
+  cancelledAt      DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  travelers Traveler[]
+  payments  Payment[]
+  documents TravelDocument[]
+  review    Review?
+
+  @@index([departureId, status])
+  @@index([customerId])
+  @@map("booking")
+}
+
+model Traveler {
+  id                  Int      @id @default(autoincrement())
+  bookingId           Int
+  booking             Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fullName            String
+  dateOfBirth         DateTime @db.Date
+  passportNoEncrypted String // AES-256-GCM (NFR-SEC-03)
+  passportLast3       String   @db.VarChar(3)
+  passportExpiry      DateTime @db.Date
+
+  @@map("traveler")
+}
+
+// ---------- Payment (M5) - rows are never deleted (Appendix B.2) ----------
+
+model Payment {
+  id                Int           @id @default(autoincrement())
+  bookingId         Int
+  booking           Booking       @relation(fields: [bookingId], references: [id])
+  type              PaymentType
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("USD")
+  method            PaymentMethod
+  gatewayTxnId      String?       @unique
+  receiptNo         String?
+  reason            String?
+  refundStatus      RefundStatus?
+  recordedByStaffId Int?
+  recordedByStaff   StaffUser?    @relation("PaymentRecordedBy", fields: [recordedByStaffId], references: [id])
+  paidOn            DateTime      @default(now())
+
+  @@index([bookingId])
+  @@index([paidOn])
+  @@map("payment")
+}
+
+// ---------- Documents (M6) ----------
+
+model TravelDocument {
+  id           Int          @id @default(autoincrement())
+  bookingId    Int
+  booking      Booking      @relation(fields: [bookingId], references: [id])
+  docType      DocumentType
+  originalName String
+  filePath     String
+  mimeType     String
+  uploadedById Int
+  uploadedBy   StaffUser    @relation(fields: [uploadedById], references: [id])
+  uploadedOn   DateTime     @default(now())
+
+  @@map("travel_document")
+}
+
+// ---------- Reviews (M9) ----------
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  bookingId Int      @unique // one review per booking (BR-06)
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  rating    Int // 1..5, checked by Zod and the review_rating_check constraint (migration 20261118210000)
+  comment   String?  @db.VarChar(1000)
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("review")
+}
+
+// ---------- Administration (M11) ----------
+
+model CancellationRule {
+  id            Int      @id @default(autoincrement())
+  minDaysBefore Int // inclusive lower bound of days before departure
+  maxDaysBefore Int? // inclusive upper bound, null = no limit
+  refundPercent Int
+  validFrom     DateTime // applies to bookings created on/after this time (FR-ADM-04)
+
+  @@index([validFrom])
+  @@map("cancellation_rule")
+}
+
+model AuditLogEntry {
+  id        BigInt   @id @default(autoincrement())
+  actorType String // CUSTOMER | STAFF | SYSTEM
+  actorId   Int?
+  actorName String
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity, entityId])
+  @@map("audit_log_entry")
+}
+
+model EmailMessage {
+  id          Int         @id @default(autoincrement())
+  recipient   String
+  subject     String
+  bodyHtml    String
+  attachments Json? // [{ filename, path }]
+  status      EmailStatus @default(WAITING)
+  attempts    Int         @default(0)
+  lastError   String?
+  nextTryAt   DateTime    @default(now())
+  sentAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([status, nextTryAt])
+  @@map("email_message")
+}
+
+// Staging-only clock offset (SRS Section 9.2)
+model SystemSetting {
+  key   String @id
+  value String
+
+  @@map("system_setting")
+}

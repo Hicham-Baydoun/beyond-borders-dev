@@ -1,0 +1,105 @@
+# Runs on every pull request and every push to main. All jobs must pass before merging.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: Server - lint and tests
+    runs-on: ubuntu-latest
+    # Throwaway PostgreSQL for tests. CI never touches the shared Neon database.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: bbtms
+          POSTGRES_PASSWORD: bbtms
+          POSTGRES_DB: bbtms_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U bbtms"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://bbtms:bbtms@localhost:5432/bbtms_test
+      SESSION_SECRET: ci-only-session-secret-not-used-anywhere-else
+      ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: server
+      - name: Apply migrations to the CI database
+        run: npx prisma migrate deploy
+        working-directory: server
+      - name: Lint
+        run: npm run lint -w server
+      - name: Tests
+        run: npm test -w server
+
+  client:
+    name: Client - build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build -w client
+
+  security:
+    name: Security - dependencies and secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the secret scan sees every commit in the PR
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Full dependency report
+        run: npm audit --omit=dev || true
+      # Fails on critical issues. Raise to "high" once zod, nodemailer and node-cron are upgraded.
+      - name: Block critical vulnerabilities
+        run: npm audit --omit=dev --audit-level=critical
+      # Gitleaks CLI with an explicit commit range: every commit in the PR (base..head), whatever
+      # the count; on pushes to main, the whole history. Settings come from .gitleaks.toml.
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.0
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz -C /usr/local/bin gitleaks
+          gitleaks version
+      - name: Scan for committed secrets
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # -m includes changes made in merge commits. Custom log-opts replace gitleaks' defaults,
+          # so the push scan restates full history across all refs.
+          if [ -n "$BASE_SHA" ]; then
+            gitleaks git --redact --verbose --log-opts="-m --full-history $BASE_SHA..$HEAD_SHA" .
+          else
+            gitleaks git --redact --verbose --log-opts="-m --full-history --all" .
+          fi
