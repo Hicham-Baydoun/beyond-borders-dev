@@ -1,0 +1,63 @@
+# CodeRabbit AI review settings. Install the app once: https://github.com/apps/coderabbitai
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+tone_instructions: "Be direct and concise. Students wrote this code: when you flag a problem, say why it matters and show the fix."
+
+reviews:
+  profile: assertive            # more findings, including style and maintainability
+  request_changes_workflow: true # PR is blocked until CodeRabbit's comments are resolved
+  high_level_summary: true
+  review_status: true
+  poem: false
+  collapse_walkthrough: true
+  sequence_diagrams: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: ["main"]
+  path_filters:
+    - "!**/package-lock.json"
+    - "!**/dist/**"
+  path_instructions:
+    - path: "server/src/**/*.js"
+      instructions: |
+        Enforce the BBTMS team rules (README, SRS Sections 4.4 and 5.4):
+        - A module in src/modules/mXX-* reads and writes ONLY its own tables. Calls to another module must go through that module's service.js, never its repository.js or prisma directly.
+        - Emails and audit entries are triggered by events through src/lib/eventBus.js, never by direct calls to the notification module.
+        - Time must come from src/lib/clock.js. Flag any `new Date()` or `Date.now()` used for business logic.
+        - Every route that is not public must use requireRole(); flag missing authorization checks.
+        - Request bodies, params and queries must be validated with Zod through the validate middleware.
+        - Error messages must say what went wrong and what to do next.
+        - Passport numbers must only be stored encrypted (src/lib/crypto.js) and never logged or returned in full.
+        - Never log passwords, session IDs, DATABASE_URL or ENCRYPTION_KEY.
+    - path: "server/prisma/**"
+      instructions: |
+        Check schema and migration changes for data loss (dropped columns or tables, NOT NULL added without a default).
+        Remind the author that only one person runs migrations on the shared Neon database.
+    - path: "server/**/__tests__/**"
+      instructions: "Tests must use the local bbtms_test database and the clock helper to move time, never the shared database or real waits."
+    - path: "client/src/**/*.{js,jsx}"
+      instructions: |
+        - Use the shared components from client/src/components/ui instead of re-styling raw elements.
+        - Every input needs a label; color must never be the only signal; interactive elements need a visible focus state.
+        - Pages must work at 360 px wide without horizontal scrolling (NFR-COM-01).
+        - Call the API only through lib/api.js. Never trust client-side role checks for security; the server checks every request.
+        - Flag dangerouslySetInnerHTML and any unescaped user content.
+    - path: "**/*.{env,env.*}"
+      instructions: "This file must never be committed. Flag it as a blocker."
+  tools:
+    eslint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
+    actionlint:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  jira:
+    usage: auto
