@@ -73,7 +73,7 @@ export default function Layout() {
 
   const account = user ? (
     <>
-      <Link to={roleHome[user.role] ?? '/'} className="text-[0.72rem] font-medium uppercase tracking-[0.2em] hover:text-accent-700">
+      <Link to={roleHome[user.role] ?? '/'} className="min-w-0 max-w-[11rem] truncate text-[0.72rem] font-medium uppercase tracking-[0.2em] hover:text-accent-700" title={user.name}>
         {user.name}
       </Link>
       <Button variant="secondary" size="sm" onClick={signOut}>Log out</Button>

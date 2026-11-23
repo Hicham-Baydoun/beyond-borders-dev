@@ -109,6 +109,14 @@ export default function StaffLayout() {
 
   useEffect(() => setDrawer(false), [location.pathname]);
 
+  // The drawer only exists below 1024 px: close it when the window grows, or the hidden drawer would keep the page inert.
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 1024px)');
+    const onChange = (e) => e.matches && setDrawer(false);
+    desktop.addEventListener('change', onChange);
+    return () => desktop.removeEventListener('change', onChange);
+  }, []);
+
   // Modal drawer: focus moves in, Tab stays inside, the page behind is inert, and focus returns on close.
   useEffect(() => {
     if (!drawer) return undefined;

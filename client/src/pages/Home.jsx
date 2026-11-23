@@ -201,7 +201,7 @@ function DeparturesBoard() {
           <p className="max-w-xs text-sm text-primary-300">Every package leaves from Beirut with flights, hotel and transfers included.</p>
         </div>
 
-        <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_22rem] xl:grid-cols-[1fr_26rem]">
+        <div className="mt-12 grid gap-12 xl:grid-cols-[1fr_24rem] 2xl:grid-cols-[1fr_26rem]">
           <div className="border-t border-paper/20">
             <div aria-hidden="true" className="hidden grid-cols-[7.5rem_1fr_5.5rem_6rem_7.5rem] gap-4 py-3 pl-3 text-[0.6rem] uppercase tracking-[0.28em] text-primary-400 md:grid">
               <span>Date</span>
@@ -242,7 +242,7 @@ function DeparturesBoard() {
           </div>
 
           {/* Postcard preview of the hovered departure */}
-          <figure className="relative hidden lg:block" aria-hidden="true">
+          <figure className="relative hidden xl:block" aria-hidden="true">
             <div className="sticky top-28 rotate-[-1.5deg] bg-paper p-3 pb-16 shadow-pop">
               <div className="relative aspect-[4/5] overflow-hidden bg-paper-dark">
                 {departures.map((d) => (

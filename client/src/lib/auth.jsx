@@ -23,8 +23,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    version.current += 1;
     const { user: u } = await api('/auth/login', { method: 'POST', body: { email, password } });
+    version.current += 1; // only a successful login supersedes the startup check
     setUser(u);
     return u;
   }, []);
@@ -32,8 +32,8 @@ export function AuthProvider({ children }) {
   // Clears the user only once the server has ended the session. On failure it throws, so the caller
   // can tell the user (otherwise someone on a shared computer would think they were logged out).
   const logout = useCallback(async () => {
-    version.current += 1;
     await api('/auth/logout', { method: 'POST' });
+    version.current += 1;
     setUser(null);
   }, []);
 

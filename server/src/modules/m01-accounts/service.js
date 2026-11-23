@@ -146,7 +146,12 @@ async function login({ email, password }, meta = {}) {
 
   if (account.failedLoginCount !== 0 || account.lockedUntil) {
     // Reset only if no active lock appeared since we read the account (a concurrent 5th failure).
-    await repo.resetLoginStateUnlessLocked(kind, account.id, now);
+    // If one did, refuse this login too, exactly like the lock check at the top.
+    const { count } = await repo.resetLoginStateUnlessLocked(kind, account.id, now);
+    if (count === 0) {
+      emit(Events.LOGIN_FAILED, { kind, id: account.id, reason: 'LOCKED', ...meta });
+      throw locked(MSG.locked);
+    }
   }
   if (account.status === 'UNCONFIRMED') throw forbidden(MSG.unconfirmed, { code: 'UNCONFIRMED' });
   if (account.status === 'DEACTIVATED') throw forbidden(MSG.deactivated, { code: 'DEACTIVATED' });
