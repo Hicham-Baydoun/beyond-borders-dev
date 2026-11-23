@@ -1,0 +1,10 @@
+{
+  "name": "@bb/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Validation schemas shared by the client and the server (KAN-83). One definition, so they never disagree.",
+  "main": "index.js",
+  "dependencies": {
+    "zod": "3.23.8"
+  }
+}

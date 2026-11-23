@@ -79,11 +79,6 @@ function WindowView() {
           </div>
         </div>
       </div>
-      <figcaption className="mt-5 flex items-center justify-center gap-3 text-[0.65rem] uppercase tracking-[0.28em] text-primary-500">
-        <span className="h-px w-8 bg-primary-900/25" aria-hidden="true" />
-        Window seat · <span className="text-accent-700" aria-live="polite">{windowViews[i].city}</span>
-        <span className="h-px w-8 bg-primary-900/25" aria-hidden="true" />
-      </figcaption>
     </figure>
   );
 }

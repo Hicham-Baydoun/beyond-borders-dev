@@ -6,12 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test src/lib/"
   },
   "dependencies": {
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-router-dom": "6.30.6"
+    "react-router-dom": "6.30.6",
+    "@bb/shared": "0.1.0",
+    "@hookform/resolvers": "3.9.1",
+    "react-hook-form": "7.54.2",
+    "zod": "3.23.8"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "4.3.4",

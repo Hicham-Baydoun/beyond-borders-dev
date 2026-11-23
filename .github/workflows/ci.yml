@@ -55,7 +55,7 @@ jobs:
         run: npm test -w server
 
   client:
-    name: Client - build
+    name: Client - tests and build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,6 +64,8 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Tests
+        run: npm test -w client
       - name: Build
         run: npm run build -w client
 

@@ -3,6 +3,7 @@
   "private": true,
   "description": "Beyond Borders Travel Management System (BBTMS)",
   "workspaces": [
+    "shared",
     "server",
     "client"
   ],
