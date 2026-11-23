@@ -10,10 +10,12 @@ class AppError extends Error {
 
 const badRequest = (msg, details) => new AppError(400, msg, details);
 const unauthorized = (msg = 'Please log in to continue.') => new AppError(401, msg);
-const forbidden = (msg = 'Your account does not have permission for this action. Ask an administrator if you need access.') =>
-  new AppError(403, msg);
+const forbidden = (msg = 'Your account does not have permission for this action. Ask an administrator if you need access.', details) =>
+  new AppError(403, msg, details);
 const notFound = (msg = 'We could not find what you asked for. Check the link or go back and try again.') =>
   new AppError(404, msg);
 const conflict = (msg, details) => new AppError(409, msg, details);
+const gone = (msg, details) => new AppError(410, msg, details);
+const locked = (msg, details) => new AppError(423, msg, details);
 
-module.exports = { AppError, badRequest, unauthorized, forbidden, notFound, conflict };
+module.exports = { AppError, badRequest, unauthorized, forbidden, notFound, conflict, gone, locked };

@@ -1,18 +1,33 @@
 // Public site frame: header with a mobile menu, page content and footer.
 // UI-02 (KAN-82) adds the staff side menu and role-based menus on top of this.
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../lib/auth.jsx';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { roleHome, useAuth } from '../lib/auth.jsx';
 import { api } from '../lib/api.js';
 import Logo from './Logo.jsx';
 import { Button, cx } from './ui';
 
-const links = [
-  { to: '/search', label: 'Explore trips' },
-  { to: '/my-bookings', label: 'My bookings' },
-];
-
-const areaHome = { CUSTOMER: '/my-bookings', AGENT: '/agent', ADMINISTRATOR: '/admin' };
+// The menu shows only the signed-in role's functions (FR-ACC-04, TC-ACC-04-01). The server still checks every request.
+const menus = {
+  VISITOR: [{ to: '/search', label: 'Explore trips' }],
+  CUSTOMER: [
+    { to: '/search', label: 'Explore trips' },
+    { to: '/my-bookings', label: 'My bookings' },
+  ],
+  AGENT: [
+    { to: '/agent/customers', label: 'Customers' },
+    { to: '/agent/bookings', label: 'Bookings' },
+    { to: '/agent/payments', label: 'Payments' },
+    { to: '/agent/documents', label: 'Documents' },
+  ],
+  ADMINISTRATOR: [
+    { to: '/admin/catalog', label: 'Catalog' },
+    { to: '/admin/staff', label: 'Staff' },
+    { to: '/admin/reports', label: 'Reports' },
+    { to: '/admin/audit', label: 'Audit log' },
+    { to: '/admin/cancellation-policy', label: 'Cancellation policy' },
+  ],
+};
 
 function NavItem({ to, label, onClick }) {
   return (
@@ -54,10 +69,17 @@ function ApiStatus() {
 }
 
 export default function Layout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === '/';
+  const links = menus[user?.role] ?? menus.VISITOR;
+
+  const signOut = async () => {
+    await logout();
+    navigate('/', { replace: true });
+  };
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
@@ -78,9 +100,12 @@ export default function Layout() {
           <span className="flex-1" />
           <div className="hidden items-center gap-2 md:flex">
             {user ? (
-              <Button to={areaHome[user.role] ?? '/'} variant="secondary" size="sm">
-                {user.name}
-              </Button>
+              <>
+                <Button to={roleHome[user.role] ?? '/'} variant="secondary" size="sm">
+                  {user.name}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={signOut}>Log out</Button>
+              </>
             ) : (
               <>
                 <Button to="/login" variant="ghost" size="sm">Log in</Button>
@@ -108,8 +133,17 @@ export default function Layout() {
                 <NavItem key={l.to} {...l} />
               ))}
               <div className="mt-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3">
-                <Button to="/login" variant="secondary">Log in</Button>
-                <Button to="/register">Create account</Button>
+                {user ? (
+                  <>
+                    <Button to={roleHome[user.role] ?? '/'} variant="secondary">{user.name}</Button>
+                    <Button variant="ghost" onClick={signOut}>Log out</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button to="/login" variant="secondary">Log in</Button>
+                    <Button to="/register">Create account</Button>
+                  </>
+                )}
               </div>
             </div>
           </div>

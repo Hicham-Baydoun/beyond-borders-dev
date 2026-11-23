@@ -6,6 +6,9 @@ import ComingSoon from './pages/ComingSoon.jsx';
 import DevUi from './pages/DevUi.jsx';
 import Home from './pages/Home.jsx';
 import NotFound from './pages/NotFound.jsx';
+import Confirm from './pages/auth/Confirm.jsx';
+import Login from './pages/auth/Login.jsx';
+import Register from './pages/auth/Register.jsx';
 
 const Soon = (title, ticket) => <ComingSoon title={title} ticket={ticket} />;
 
@@ -17,8 +20,9 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="search" element={Soon('Explore trips', 'M3 Search (KAN-8)')} />
         <Route path="packages/:id" element={Soon('Package details', 'M2 Catalog (KAN-7)')} />
-        <Route path="login" element={Soon('Log in', 'M1 Accounts (KAN-6)')} />
-        <Route path="register" element={Soon('Create account', 'M1 Accounts (KAN-6)')} />
+        <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
+        <Route path="confirm" element={<Confirm />} />
         <Route element={<RequireRole roles={['CUSTOMER']} />}>
           <Route path="my-bookings" element={Soon('My bookings', 'M4 Booking (KAN-9)')} />
         </Route>
@@ -27,6 +31,9 @@ export default function App() {
         <Route path="agent" element={<RequireRole roles={['AGENT']} />}>
           <Route index element={Soon('Agent dashboard', 'UI-02 (KAN-82)')} />
           <Route path="customers" element={Soon('Customers', 'M7 Customers (KAN-12)')} />
+          <Route path="bookings" element={Soon('Bookings', 'M4 Booking (KAN-9)')} />
+          <Route path="payments" element={Soon('Payments', 'M5 Payment (KAN-10)')} />
+          <Route path="documents" element={Soon('Documents', 'M6 Documents (KAN-11)')} />
         </Route>
 
         {/* Admin pages */}
@@ -36,6 +43,7 @@ export default function App() {
           <Route path="staff" element={Soon('Staff accounts', 'M11 Admin (KAN-16)')} />
           <Route path="reports" element={Soon('Reports', 'M10 Reports (KAN-15)')} />
           <Route path="audit" element={Soon('Audit log', 'M11 Admin (KAN-16)')} />
+          <Route path="cancellation-policy" element={Soon('Cancellation policy', 'M11 Admin (KAN-16)')} />
         </Route>
 
         {/* Component gallery for reviewers, development builds only */}
