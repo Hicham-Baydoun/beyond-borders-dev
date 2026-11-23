@@ -1,35 +1,58 @@
 /** @type {import('tailwindcss').Config} */
 // Brand theme (KAN-81). Use these names in components, never raw hex values.
+// Every colour is a CSS variable from src/index.css, so light and dark mode switch without `dark:` classes.
+const v = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+const scale = (prefix, steps) => Object.fromEntries(steps.map((s) => [s, v(`${prefix}-${s}`)]));
+const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+
+const ink = scale('ink', STEPS);
+
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        // Deep ocean teal: navigation, primary buttons, links
-        primary: {
-          50: '#effaf9', 100: '#d6f1ee', 200: '#addfdb', 300: '#7cc7c2', 400: '#4aa9a5',
-          500: '#2f8d8a', 600: '#23716f', 700: '#1f5b5a', 800: '#1c4a4a', 900: '#173c3d', 950: '#0b2526',
-        },
-        // Sunset coral: highlights and calls to action on dark backgrounds
-        accent: {
-          50: '#fff4ef', 100: '#ffe6db', 200: '#ffc9b2', 300: '#ffa47f', 400: '#fb7a4b',
-          500: '#f25a27', 600: '#df411b', 700: '#b93118', 800: '#932a1a', 900: '#772618',
-        },
-        sand: { 50: '#fbfaf7', 100: '#f5f2ea', 200: '#ebe4d4' },
-        success: { 50: '#ecfdf3', 600: '#16a34a', 700: '#15803d' },
-        warning: { 50: '#fffbeb', 600: '#d97706', 700: '#b45309' },
-        danger: { 50: '#fef2f2', 600: '#dc2626', 700: '#b91c1c' },
+        // Logo ink. Text and lines: higher number = stronger. Flips to warm cream in dark mode.
+        primary: ink,
+        // Older components use slate; it points at the same themed scale so they follow dark mode too.
+        slate: ink,
+        // Brass gold. Higher number = stronger contrast against the page in both themes.
+        accent: scale('brass', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        // Page background, banded sections and raised surfaces (cards, boarding pass).
+        paper: { DEFAULT: v('paper'), dark: v('paper-dark') },
+        surface: v('surface'),
+        bezel: v('bezel'),
+        // Always-dark bands (announcement strip, departures board, footer) in both themes.
+        night: v('night'),
+        sand: { 50: v('paper'), 100: v('paper-dark'), 200: v('bezel') },
+        success: { 50: v('success-50'), 600: v('success-600'), 700: v('success-700') },
+        warning: { 50: v('warning-50'), 600: v('warning-600'), 700: v('warning-700') },
+        danger: { 50: v('danger-50'), 600: v('danger-600'), 700: v('danger-700') },
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        // Display serif echoes the logo lettering; page and section headings only.
+        display: ['"Bodoni Moda"', 'Didot', 'Georgia', 'serif'],
+        // Geometric sans like the logo tagline.
+        sans: ['Jost', 'Futura', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08)',
+        card: '0 18px 40px -30px rgb(var(--shadow) / 0.45)',
+        pop: '0 24px 50px -24px rgb(var(--shadow) / 0.55)',
       },
       keyframes: {
         'fade-in': { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } },
+        'pop-in': { from: { opacity: 0, transform: 'translateY(-6px) scale(.98)' }, to: { opacity: 1, transform: 'none' } },
+        // Slow zoom on photos (Ken Burns) and clouds drifting past the airplane window.
+        kenburns: { from: { transform: 'scale(1.02)' }, to: { transform: 'scale(1.14) translate(-1.5%, -1%)' } },
+        drift: { from: { transform: 'translateX(-10%)' }, to: { transform: 'translateX(40%)' } },
       },
-      animation: { 'fade-in': 'fade-in 150ms ease-out' },
+      animation: {
+        'fade-in': 'fade-in 150ms ease-out',
+        'pop-in': 'pop-in 180ms cubic-bezier(.2,.8,.2,1)',
+        kenburns: 'kenburns 9s ease-out forwards',
+        drift: 'drift 14s linear infinite alternate',
+        'drift-slow': 'drift 22s linear infinite alternate-reverse',
+      },
     },
   },
   plugins: [],

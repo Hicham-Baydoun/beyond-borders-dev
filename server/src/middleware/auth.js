@@ -18,12 +18,18 @@ function requireAuth(req, _res, next) {
 
 // Usage: router.get('/x', requireRole(Roles.AGENT, Roles.ADMINISTRATOR), handler)
 function requireRole(...allowed) {
-  return (req, _res, next) => {
+  return function requireRoleCheck(req, _res, next) {
     const user = req.session?.user;
     if (!user) return next(unauthorized());
-    if (!allowed.includes(user.role)) return next(forbidden());
+    if (!allowed.includes(user.role)) return next(forbidden('Your role cannot use this function. Ask an administrator if you need access.'));
     next();
   };
 }
 
-module.exports = { Roles, requireAuth, requireRole };
+// Marks a route as open to visitors on purpose. Every route needs requireAuth, requireRole or
+// publicRoute; tests/routeGuards.test.js fails the build otherwise (FR-ACC-04).
+function publicRoute(_req, _res, next) {
+  next();
+}
+
+module.exports = { Roles, requireAuth, requireRole, publicRoute };

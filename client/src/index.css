@@ -2,18 +2,125 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Theme colours (RGB channels, used by tailwind.config.js).
+  - Light is the default. Dark applies when <html data-theme="dark">, set by lib/theme.jsx
+    (it follows the system setting unless the visitor picks one).
+  - .on-night keeps light-theme meanings inside always-dark bands (strip, departures board, footer),
+    so "text-paper" stays cream there in both themes.
+  Contrast is kept deliberately soft: warm paper instead of white, navy instead of black.
+*/
+:root,
+.on-night {
+  --paper: 243 238 228;
+  --paper-dark: 233 225 209;
+  --surface: 248 245 238;
+  --bezel: 217 207 187;
+  --shadow: 27 34 48;
+
+  --ink-50: 239 234 224;
+  --ink-100: 228 222 210;
+  --ink-200: 205 199 187;
+  --ink-300: 169 165 156;
+  --ink-400: 133 133 138;
+  --ink-500: 99 104 120;
+  --ink-600: 77 84 102;
+  --ink-700: 59 66 85;
+  --ink-800: 44 51 68;
+  --ink-900: 35 42 57;
+  --ink-950: 24 29 40;
+
+  --brass-50: 251 248 241;
+  --brass-100: 245 238 220;
+  --brass-200: 234 219 180;
+  --brass-300: 221 195 135;
+  --brass-400: 207 169 96;
+  --brass-500: 192 146 69;
+  --brass-600: 166 120 58;
+  --brass-700: 134 94 49;
+  --brass-800: 111 77 46;
+  --brass-900: 93 65 41;
+
+  --success-50: 236 247 239;
+  --success-600: 34 139 76;
+  --success-700: 27 112 61;
+  --warning-50: 252 246 230;
+  --warning-600: 196 120 20;
+  --warning-700: 160 92 14;
+  --danger-50: 251 240 238;
+  --danger-600: 196 60 52;
+  --danger-700: 162 44 38;
+}
+
+:root {
+  --night: 31 38 53;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --paper: 22 27 37;
+  --paper-dark: 27 33 44;
+  --surface: 31 38 50;
+  --bezel: 43 50 64;
+  --night: 16 20 28;
+  --shadow: 0 0 0;
+
+  --ink-50: 29 35 48;
+  --ink-100: 36 43 56;
+  --ink-200: 51 58 72;
+  --ink-300: 74 80 92;
+  --ink-400: 107 110 116;
+  --ink-500: 139 139 138;
+  --ink-600: 168 165 158;
+  --ink-700: 194 189 178;
+  --ink-800: 214 208 195;
+  --ink-900: 230 223 209;
+  --ink-950: 241 235 223;
+
+  --brass-50: 42 33 23;
+  --brass-100: 58 45 29;
+  --brass-200: 93 65 41;
+  --brass-300: 134 94 49;
+  --brass-400: 166 120 58;
+  --brass-500: 192 146 69;
+  --brass-600: 207 169 96;
+  --brass-700: 214 182 118;
+  --brass-800: 228 205 155;
+  --brass-900: 240 226 196;
+
+  --success-50: 22 40 31;
+  --success-600: 96 196 132;
+  --success-700: 128 212 158;
+  --warning-50: 45 36 18;
+  --warning-600: 226 168 80;
+  --warning-700: 236 190 120;
+  --danger-50: 52 26 28;
+  --danger-600: 232 112 104;
+  --danger-700: 240 146 138;
+  color-scheme: dark;
+}
+
 @layer base {
   html { -webkit-text-size-adjust: 100%; }
-  body { @apply bg-sand-50 font-sans text-slate-800 antialiased; }
-  h1, h2, h3 { @apply text-slate-900; }
+  body { @apply bg-paper font-sans text-primary-800 antialiased transition-colors duration-300; }
+  h1, h2, h3 { @apply text-primary-900; }
+  h1, h2 { @apply font-display font-normal tracking-tight; }
   /* Visible focus for keyboard users on every interactive element (accessibility rule in KAN-81). */
-  :focus-visible { @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white; }
+  :focus-visible { @apply outline-none ring-2 ring-accent-500 ring-offset-2 ring-offset-paper; }
 }
 
 @layer components {
-  .container-page { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+  .container-page { @apply mx-auto w-full max-w-[120rem] px-4 sm:px-6 lg:px-12 2xl:px-20; }
+  /* Spaced capitals, like the logo tagline. */
+  .eyebrow { @apply text-xs font-medium uppercase tracking-[0.28em]; }
+  /* Hairline rule, like the line under BORDERS in the logo. */
+  .rule { @apply h-px w-full bg-primary-900/15; }
+  /* Gentle entrance when a section scrolls into view (see hooks/useReveal.js). */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.is-visible { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
 }

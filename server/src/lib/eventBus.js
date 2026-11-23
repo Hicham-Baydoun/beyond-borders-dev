@@ -7,6 +7,12 @@ bus.setMaxListeners(50);
 
 // Event names used across modules. Add new ones here so they stay in one place.
 const Events = Object.freeze({
+  CUSTOMER_REGISTERED: 'customer.registered',
+  CUSTOMER_CONFIRMED: 'customer.confirmed',
+  LOGIN_SUCCEEDED: 'auth.login.succeeded',
+  LOGIN_FAILED: 'auth.login.failed',
+  ACCOUNT_LOCKED: 'auth.account.locked',
+  LOGGED_OUT: 'auth.logout',
   BOOKING_CREATED: 'booking.created',
   BOOKING_CONFIRMED: 'booking.confirmed',
   BOOKING_CANCELLED: 'booking.cancelled',

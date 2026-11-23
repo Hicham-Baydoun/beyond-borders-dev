@@ -46,7 +46,7 @@ export function ToastProvider({ children }) {
           <div
             key={t.id}
             role={t.tone === 'error' ? 'alert' : 'status'}
-            className="pointer-events-auto flex w-full max-w-sm animate-fade-in overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-slate-200"
+            className="pointer-events-auto flex w-full max-w-sm animate-fade-in overflow-hidden rounded-xl bg-surface shadow-xl ring-1 ring-slate-200"
           >
             <span className={cx('w-1.5 shrink-0', tones[t.tone].bar)} />
             <div className="flex flex-1 items-start gap-3 p-4">

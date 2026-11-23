@@ -11,4 +11,5 @@ export { default as EmptyState } from './EmptyState.jsx';
 export { default as Alert } from './Alert.jsx';
 export { ToastProvider, useToast } from './Toast.jsx';
 export { default as Price, formatPrice } from './Price.jsx';
+export { default as DateCalendar } from './DateCalendar.jsx';
 export { cx } from './cx.js';
