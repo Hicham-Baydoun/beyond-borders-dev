@@ -16,14 +16,17 @@ export default {
           500: '#c09245', 600: '#a6783a', 700: '#865e31', 800: '#6f4d2e', 900: '#5d4129',
         },
         sand: { 50: '#fbfaf7', 100: '#f5f2ea', 200: '#ebe4d4' },
+        // Warm paper for page backgrounds: the editorial base of the site.
+        paper: { DEFAULT: '#f6f1e7', dark: '#ece4d3' },
         success: { 50: '#ecfdf3', 600: '#16a34a', 700: '#15803d' },
         warning: { 50: '#fffbeb', 600: '#d97706', 700: '#b45309' },
         danger: { 50: '#fef2f2', 600: '#dc2626', 700: '#b91c1c' },
       },
       fontFamily: {
         // Display serif echoes the logo lettering; page and section headings only.
-        display: ['"Playfair Display"', 'Georgia', 'serif'],
-        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['"Bodoni Moda"', 'Didot', 'Georgia', 'serif'],
+        // Geometric sans like the logo tagline.
+        sans: ['Jost', 'Futura', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
         card: '0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08)',

@@ -33,7 +33,7 @@ export default function Logo({ light = false, tagline = false }) {
     <Link to="/" className="flex items-center gap-2.5 rounded-lg" aria-label="Beyond Borders home">
       <LogoMark className={ink} />
       <span className="flex flex-col leading-none">
-        <span className={cx('font-display text-lg font-semibold uppercase tracking-[0.12em]', ink)}>
+        <span className={cx('whitespace-nowrap font-display text-base font-semibold uppercase tracking-[0.08em] sm:text-lg sm:tracking-[0.12em]', ink)}>
           Beyond Borders
         </span>
         {tagline && (

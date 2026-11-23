@@ -7,11 +7,11 @@ export default function AuthShell({ title, subtitle, children, footer }) {
     <div className="mx-auto w-full max-w-md py-4 sm:py-8">
       <div className="mb-6 text-center">
         <LogoMark className="mx-auto h-12 w-12 text-primary-900" />
-        <h1 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
-        {subtitle && <p className="mt-2 text-sm text-slate-600">{subtitle}</p>}
+        <h1 className="mt-5 text-4xl sm:text-5xl">{title}</h1>
+        {subtitle && <p className="mt-3 text-sm text-primary-600">{subtitle}</p>}
       </div>
       <Card>{children}</Card>
-      {footer && <div className="mt-5 text-center text-sm text-slate-600">{footer}</div>}
+      {footer && <div className="mt-6 text-center text-sm text-primary-600">{footer}</div>}
     </div>
   );
 }
