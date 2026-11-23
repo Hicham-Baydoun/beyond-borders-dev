@@ -1,11 +1,13 @@
-// Site frame: announcement strip, masthead header with role menus, page content and footer.
+// Site frame: location strip, header (logo and role menu on the left, account and settings on the right),
+// page content and footer.
 // UI-02 (KAN-82) adds the staff side menu on top of this.
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { roleHome, useAuth } from '../lib/auth.jsx';
 import { api } from '../lib/api.js';
 import Logo, { LogoMark } from './Logo.jsx';
-import ThemeToggle from './ThemeToggle.jsx';
+import SettingsMenu, { PinIcon } from './SettingsMenu.jsx';
+import { useLocationPref } from '../lib/location.jsx';
 import { Button, cx } from './ui';
 
 // The menu shows only the signed-in role's functions (FR-ACC-04, TC-ACC-04-01). The server still checks every request.
@@ -68,6 +70,7 @@ function ApiStatus() {
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { city } = useLocationPref();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
@@ -101,25 +104,27 @@ export default function Layout() {
         Skip to content
       </a>
 
-      {/* Announcement strip */}
+      {/* Announcement strip: the visitor's location on the left */}
       <div className="on-night bg-night text-paper">
-        <div className="container-page flex h-8 items-center justify-center gap-3 text-[0.65rem] uppercase tracking-[0.28em] sm:justify-between">
-          <span>Departures from Beirut</span>
-          <span className="hidden text-accent-300 sm:inline">Season 2027 now boarding</span>
+        <div className="container-page flex h-8 items-center justify-between gap-3 text-[0.65rem] uppercase tracking-[0.28em]">
+          <span className="inline-flex items-center gap-1.5" title="Your location. Change it in Settings.">
+            <PinIcon className="h-3.5 w-3.5 text-accent-300" />
+            <span className="sr-only">Your location:</span>
+            {city}
+          </span>
+          <span className="hidden text-accent-300 sm:inline">Season 2027 · Departures from Beirut</span>
         </div>
       </div>
 
       <header className="sticky top-0 z-40 border-b border-primary-900/15 bg-paper/95 backdrop-blur">
-        <nav className="container-page grid h-[4.5rem] grid-cols-[1fr_auto_1fr] items-center gap-4" aria-label="Main">
+        <nav className="container-page flex h-[4.5rem] items-center gap-10" aria-label="Main">
+          <Logo />
           <div className="hidden items-center gap-7 md:flex">
             {links.map((l) => <NavItem key={l.to} {...l} />)}
           </div>
-          <div className="col-start-1 md:col-start-2">
-            <Logo />
-          </div>
-          <div className="col-start-3 flex items-center justify-end gap-5">
-            <ThemeToggle className="hidden sm:inline-flex" />
+          <div className="ml-auto flex items-center gap-5">
             <div className="hidden items-center gap-5 md:flex">{account}</div>
+            <SettingsMenu />
             <button
               type="button"
               className="-mr-2 flex h-11 w-11 items-center justify-center md:hidden"
@@ -140,7 +145,6 @@ export default function Layout() {
               {links.map((l) => <NavItem key={l.to} {...l} large />)}
               <div className="rule my-4" />
               <div className="flex items-center justify-between gap-4">{account}</div>
-              <ThemeToggle className="mt-4 self-start sm:hidden" />
             </div>
           </div>
         )}

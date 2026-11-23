@@ -4,7 +4,7 @@
 import { useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogoMark } from '../components/Logo.jsx';
-import { Button, MonthPicker, cx } from '../components/ui';
+import { Button, DateCalendar, cx } from '../components/ui';
 import { formatPrice } from '../components/ui/Price.jsx';
 
 // Seed departures (SRS Table 33). Replace with an API call once M2/M3 expose them.
@@ -15,6 +15,8 @@ const departures = [
   { code: 'CDG', city: 'Paris', country: 'France', date: '2027-09-10', days: 8, price: 1450, places: 12 },
 ];
 
+const DEPARTURE_DATES = departures.map((d) => d.date);
+
 const principles = [
   { n: 'I', title: 'One honest price', text: 'Flights, hotel and transfers in a single price per person. What you see on the board is what you pay.' },
   { n: 'II', title: 'Your places, held', text: 'Choose a departure and we hold your places while you finish paying, so nobody books them from under you.' },
@@ -22,7 +24,7 @@ const principles = [
 ];
 
 const route = [
-  { label: 'Find', title: 'Pick a departure', text: 'Search by destination, month, budget and group size.' },
+  { label: 'Find', title: 'Pick a departure', text: 'Search by destination, date, budget and group size.' },
   { label: 'Board', title: 'Add your travelers', text: 'Enter passport details once. They are stored encrypted.' },
   { label: 'Fly', title: 'Pay and go', text: 'Your confirmation, invoice and itinerary arrive by email.' },
 ];
@@ -83,7 +85,7 @@ function Barcode() {
 
 function BoardingPass() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ destination: '', month: '', travelers: '2' });
+  const [form, setForm] = useState({ destination: '', date: '', travelers: '2' });
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const submit = (e) => {
@@ -126,11 +128,12 @@ function BoardingPass() {
         </div>
         <div className="mt-5 grid grid-cols-2 gap-5">
           <div className="border-b border-primary-900/20 pb-2">
-            <label htmlFor="bp-month" className={label}>Month</label>
-            <MonthPicker
-              id="bp-month"
-              value={form.month}
-              onChange={(month) => setForm((f) => ({ ...f, month }))}
+            <label htmlFor="bp-date" className={label}>Departure date</label>
+            <DateCalendar
+              id="bp-date"
+              value={form.date}
+              onChange={(date) => setForm((f) => ({ ...f, date }))}
+              marked={DEPARTURE_DATES}
               buttonClassName="mt-1.5 font-display text-lg text-primary-900"
             />
           </div>
