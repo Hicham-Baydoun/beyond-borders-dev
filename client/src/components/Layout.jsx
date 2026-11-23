@@ -157,20 +157,20 @@ export default function Layout() {
       <footer className="bg-primary-950 text-primary-100">
         <div className="container-page grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-3 lg:col-span-2">
-            <Logo light />
+            <Logo light tagline />
             <p className="max-w-sm text-sm text-primary-100/70">
-              Where dreams travel further. Hand-picked packages, real people behind every booking.
+              Hand-picked travel packages, with real people behind every booking.
             </p>
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-white">Travel</h2>
+            <h2 className="eyebrow font-sans text-white">Travel</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link to="/search" className="hover:text-white">Explore trips</Link></li>
               <li><Link to="/my-bookings" className="hover:text-white">My bookings</Link></li>
             </ul>
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-white">Account</h2>
+            <h2 className="eyebrow font-sans text-white">Account</h2>
             <ul className="mt-3 space-y-2 text-sm">
               <li><Link to="/login" className="hover:text-white">Log in</Link></li>
               <li><Link to="/register" className="hover:text-white">Create account</Link></li>

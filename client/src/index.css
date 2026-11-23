@@ -6,12 +6,15 @@
   html { -webkit-text-size-adjust: 100%; }
   body { @apply bg-sand-50 font-sans text-slate-800 antialiased; }
   h1, h2, h3 { @apply text-slate-900; }
+  h1, h2 { @apply font-display font-semibold tracking-normal; }
   /* Visible focus for keyboard users on every interactive element (accessibility rule in KAN-81). */
   :focus-visible { @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white; }
 }
 
 @layer components {
   .container-page { @apply mx-auto w-full max-w-6xl px-4 sm:px-6; }
+  /* Spaced capitals, like the logo tagline. */
+  .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.25em]; }
 }
 
 @media (prefers-reduced-motion: reduce) {
