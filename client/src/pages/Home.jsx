@@ -4,7 +4,7 @@
 import { useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogoMark } from '../components/Logo.jsx';
-import { Button, cx } from '../components/ui';
+import { Button, MonthPicker, cx } from '../components/ui';
 import { formatPrice } from '../components/ui/Price.jsx';
 
 // Seed departures (SRS Table 33). Replace with an API call once M2/M3 expose them.
@@ -36,8 +36,8 @@ function WindowView() {
   return (
     <div className="relative mx-auto aspect-[3/4] w-full max-w-[14rem] sm:max-w-[18rem] lg:max-w-[22rem]" aria-hidden="true">
       {/* Cabin wall and bezel */}
-      <div className="absolute inset-0 rounded-[48%/38%] bg-paper-dark shadow-[inset_0_2px_0_rgba(255,255,255,.7),0_30px_60px_-30px_rgba(17,22,31,.55)]" />
-      <div className="absolute inset-[7%] rounded-[46%/36%] bg-[#d9cfbb] shadow-[inset_0_6px_14px_rgba(17,22,31,.35)]" />
+      <div className="absolute inset-0 rounded-[48%/38%] bg-paper-dark shadow-[0_30px_60px_-30px_rgb(var(--shadow)/.55)]" />
+      <div className="absolute inset-[7%] rounded-[46%/36%] bg-bezel shadow-[inset_0_6px_14px_rgb(var(--shadow)/.35)]" />
       <svg viewBox="0 0 300 400" className="absolute inset-[11%] h-[78%] w-[78%] overflow-hidden rounded-[44%/34%]">
         <defs>
           <linearGradient id={`sky${id}`} x1="0" y1="0" x2="0" y2="1">
@@ -59,8 +59,8 @@ function WindowView() {
         <path d="M300 300 150 372l6 10 144-40Z" fill="#1b2230" />
         <path d="M300 342 156 382h144Z" fill="#11161f" />
         {/* Window shade, half pulled down */}
-        <rect width="300" height="46" fill="#ece4d3" />
-        <rect y="40" width="300" height="6" fill="#d9cfbb" />
+        <rect width="300" height="46" style={{ fill: 'rgb(var(--paper-dark))' }} />
+        <rect y="40" width="300" height="6" style={{ fill: 'rgb(var(--bezel))' }} />
       </svg>
     </div>
   );
@@ -93,14 +93,14 @@ function BoardingPass() {
   };
 
   const label = 'block text-[0.6rem] font-medium uppercase tracking-[0.28em] text-primary-500';
-  const input = 'mt-1.5 block w-full border-0 bg-transparent p-0 font-display text-xl text-primary-900 placeholder:text-primary-300 focus:outline-none focus:ring-0';
+  const input = 'mt-1.5 block w-full border-0 bg-transparent p-0 font-display text-xl text-primary-900 placeholder:text-primary-400 focus:outline-none focus:ring-0';
 
   return (
     <form
       onSubmit={submit}
       role="search"
       aria-label="Search trips"
-      className="relative grid bg-[#fbf8f1] text-primary-900 shadow-[0_24px_50px_-28px_rgba(17,22,31,.6)] md:grid-cols-[1fr_0_14rem]"
+      className="relative grid bg-surface text-primary-900 shadow-pop md:grid-cols-[1fr_0_14rem]"
     >
       <div className="p-5 sm:p-7">
         <div className="flex items-center justify-between">
@@ -127,7 +127,12 @@ function BoardingPass() {
         <div className="mt-5 grid grid-cols-2 gap-5">
           <div className="border-b border-primary-900/20 pb-2">
             <label htmlFor="bp-month" className={label}>Month</label>
-            <input id="bp-month" type="month" className={cx(input, 'text-lg')} value={form.month} onChange={set('month')} />
+            <MonthPicker
+              id="bp-month"
+              value={form.month}
+              onChange={(month) => setForm((f) => ({ ...f, month }))}
+              buttonClassName="mt-1.5 font-display text-lg text-primary-900"
+            />
           </div>
           <div className="border-b border-primary-900/20 pb-2">
             <label htmlFor="bp-pax" className={label}>Passengers</label>
@@ -143,8 +148,8 @@ function BoardingPass() {
       {/* Perforation: notches and a dashed tear line */}
       <div aria-hidden="true" className="relative h-0 border-t border-dashed border-primary-900/25 md:h-auto md:w-0 md:border-l md:border-t-0">
         {/* Notches take the colour of what is behind the pass: paper above the fold line, ink below it */}
-        <span className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-primary-950 md:bg-paper" />
-        <span className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-primary-950 md:-bottom-3 md:-left-3 md:right-auto md:top-auto" />
+        <span className="absolute -left-3 -top-3 h-6 w-6 rounded-full bg-night md:bg-paper" />
+        <span className="absolute -right-3 -top-3 h-6 w-6 rounded-full bg-night md:-bottom-3 md:-left-3 md:right-auto md:top-auto" />
       </div>
 
       {/* Stub */}
@@ -163,7 +168,7 @@ function BoardingPass() {
 /* ---------- Departures board ---------- */
 function DeparturesBoard() {
   return (
-    <section className="bg-primary-950 text-paper" aria-labelledby="board-title">
+    <section className="on-night bg-night text-paper" aria-labelledby="board-title">
       <div className="container-page py-20 sm:py-28">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
@@ -269,7 +274,7 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden" aria-labelledby="hero-title">
+      <section className="relative" aria-labelledby="hero-title">
         <div className="container-page grid items-center gap-12 pb-16 pt-12 sm:pt-16 lg:grid-cols-[1.25fr_1fr] lg:gap-16 lg:pb-24">
           <div>
             <p className="eyebrow text-accent-700">Season 2027 · Packages from Beirut</p>
@@ -289,7 +294,7 @@ export default function Home() {
         </div>
 
         {/* The boarding pass sits on a dark band that runs into the departures board */}
-        <div className="bg-gradient-to-b from-transparent from-50% to-primary-950 to-50%">
+        <div className="bg-gradient-to-b from-transparent from-50% to-night to-50%">
           <div className="container-page">
             <BoardingPass />
           </div>

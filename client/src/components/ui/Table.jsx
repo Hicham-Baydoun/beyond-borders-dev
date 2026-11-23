@@ -4,7 +4,7 @@ import { cx } from './cx.js';
 
 export default function Table({ columns, rows, rowKey = 'id', caption, empty = 'Nothing to show yet.', className }) {
   return (
-    <div className={cx('overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-card', className)}>
+    <div className={cx('overflow-x-auto rounded-2xl border border-slate-200 bg-surface shadow-card', className)}>
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead className="bg-slate-50">

@@ -5,6 +5,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { roleHome, useAuth } from '../lib/auth.jsx';
 import { api } from '../lib/api.js';
 import Logo, { LogoMark } from './Logo.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 import { Button, cx } from './ui';
 
 // The menu shows only the signed-in role's functions (FR-ACC-04, TC-ACC-04-01). The server still checks every request.
@@ -101,7 +102,7 @@ export default function Layout() {
       </a>
 
       {/* Announcement strip */}
-      <div className="bg-primary-900 text-paper">
+      <div className="on-night bg-night text-paper">
         <div className="container-page flex h-8 items-center justify-center gap-3 text-[0.65rem] uppercase tracking-[0.28em] sm:justify-between">
           <span>Departures from Beirut</span>
           <span className="hidden text-accent-300 sm:inline">Season 2027 now boarding</span>
@@ -117,6 +118,7 @@ export default function Layout() {
             <Logo />
           </div>
           <div className="col-start-3 flex items-center justify-end gap-5">
+            <ThemeToggle className="hidden sm:inline-flex" />
             <div className="hidden items-center gap-5 md:flex">{account}</div>
             <button
               type="button"
@@ -138,6 +140,7 @@ export default function Layout() {
               {links.map((l) => <NavItem key={l.to} {...l} large />)}
               <div className="rule my-4" />
               <div className="flex items-center justify-between gap-4">{account}</div>
+              <ThemeToggle className="mt-4 self-start sm:hidden" />
             </div>
           </div>
         )}
@@ -147,7 +150,7 @@ export default function Layout() {
         <Outlet />
       </main>
 
-      <footer className="bg-primary-950 text-primary-100">
+      <footer className="on-night bg-night text-primary-100">
         <div className="container-page pt-16">
           <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
             <div className="max-w-sm space-y-4">

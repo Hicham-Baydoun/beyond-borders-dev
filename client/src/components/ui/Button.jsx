@@ -8,7 +8,7 @@ import { cx } from './cx.js';
 const variants = {
   primary: 'bg-primary-900 text-paper hover:bg-primary-800 active:bg-primary-950',
   // accent-700 and darker keep white text above 4.5:1 contrast (WCAG AA).
-  accent: 'bg-accent-700 text-white hover:bg-accent-800 active:bg-accent-900',
+  accent: 'bg-accent-700 text-paper hover:bg-accent-800 active:bg-accent-900',
   secondary: 'bg-transparent text-primary-900 ring-1 ring-inset ring-primary-900/40 hover:bg-primary-900 hover:text-paper',
   ghost: 'text-primary-900 hover:bg-primary-900/5',
   danger: 'bg-danger-600 text-white hover:bg-danger-700 shadow-sm',

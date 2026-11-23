@@ -5,7 +5,7 @@ import { cx } from './cx.js';
 
 const control = (error) =>
   cx(
-    'block w-full rounded-[2px] border bg-white/70 px-3.5 py-2.5 text-sm text-primary-900 transition',
+    'block w-full rounded-[2px] border bg-surface/70 px-3.5 py-2.5 text-sm text-primary-900 transition',
     'placeholder:text-primary-300 focus:outline-none focus:ring-2 disabled:bg-paper-dark disabled:text-primary-400',
     error
       ? 'border-danger-600 focus:border-danger-600 focus:ring-danger-600/20'
