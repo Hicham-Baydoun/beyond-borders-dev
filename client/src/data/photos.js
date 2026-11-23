@@ -1,6 +1,11 @@
 // Destination photos (public/images/destinations). All from Wikimedia Commons under Creative Commons licences.
 // The licences require credit: the /credits page lists every photo, and the footer links to it.
 // To add a photo: put a ~1280 px JPG in public/images/destinations and add an entry here.
+//
+// Content rule for every photo on this site (set by the project owner):
+//   - No churches, cathedrals, religious statues or statues of people.
+//   - Use landmarks, nature and architecture instead (e.g. Rome -> the Colosseum, Paris -> the Eiffel Tower).
+//   - Look at the photo itself before adding it, not only its title.
 const base = '/images/destinations';
 
 export const photos = {
