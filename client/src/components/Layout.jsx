@@ -117,12 +117,12 @@ export default function Layout() {
       </div>
 
       <header className="sticky top-0 z-40 border-b border-primary-900/15 bg-paper/95 backdrop-blur">
-        <nav className="container-page flex h-[4.5rem] items-center gap-10" aria-label="Main">
+        <nav className="container-page flex h-[4.5rem] items-center gap-3 md:gap-10" aria-label="Main">
           <Logo />
           <div className="hidden items-center gap-7 md:flex">
             {links.map((l) => <NavItem key={l.to} {...l} />)}
           </div>
-          <div className="ml-auto flex items-center gap-5">
+          <div className="ml-auto flex items-center gap-1 md:gap-5">
             <div className="hidden items-center gap-5 md:flex">{account}</div>
             <SettingsMenu />
             <button
@@ -190,7 +190,10 @@ export default function Layout() {
         </div>
         <div className="mt-10 border-t border-white/10">
           <div className="container-page flex flex-col gap-2 py-5 text-[0.7rem] uppercase tracking-[0.2em] text-primary-400 sm:flex-row sm:items-center sm:justify-between">
-            <span>© {new Date().getFullYear()} Beyond Borders Travel · CSC 490</span>
+            <span>
+              © {new Date().getFullYear()} Beyond Borders Travel · CSC 490 ·{' '}
+              <Link to="/credits" className="hover:text-paper">Photo credits</Link>
+            </span>
             <ApiStatus />
           </div>
         </div>

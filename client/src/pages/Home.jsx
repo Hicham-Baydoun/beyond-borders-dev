@@ -1,19 +1,26 @@
 // Landing page. Editorial travel design built from real travel objects:
 // an airplane window, a boarding pass (search), a departures board (catalog) and a flight path (how booking works).
 // The search form only builds the /search URL; M3 (search module) reads these query params.
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogoMark } from '../components/Logo.jsx';
+import FlapText from '../components/FlapText.jsx';
+import RouteMap from '../components/RouteMap.jsx';
+import useReveal from '../hooks/useReveal.js';
+import { photos, windowViews } from '../data/photos.js';
 import { Button, DateCalendar, cx } from '../components/ui';
 import { formatPrice } from '../components/ui/Price.jsx';
 
 // Seed departures (SRS Table 33). Replace with an API call once M2/M3 expose them.
 const departures = [
-  { code: 'DXB', city: 'Dubai', country: 'United Arab Emirates', date: '2027-04-15', days: 4, price: 720, places: 10 },
-  { code: 'IST', city: 'Istanbul', country: 'Turkey', date: '2027-06-12', days: 5, price: 650, places: 20 },
-  { code: 'AYT', city: 'Antalya', country: 'Turkey', date: '2027-07-03', days: 7, price: 890, places: 30 },
-  { code: 'CDG', city: 'Paris', country: 'France', date: '2027-09-10', days: 8, price: 1450, places: 12 },
-];
+  { code: 'DXB', city: 'Dubai', country: 'United Arab Emirates', date: '2027-04-15', days: 4, price: 720, places: 10, lon: 55.3, lat: 25.2, photo: photos.dubai },
+  { code: 'IST', city: 'Istanbul', country: 'Turkey', date: '2027-06-12', days: 5, price: 650, places: 20, lon: 29.0, lat: 41.0, photo: photos.istanbul },
+  { code: 'AYT', city: 'Antalya', country: 'Turkey', date: '2027-07-03', days: 7, price: 890, places: 30, lon: 30.7, lat: 36.9, photo: photos.antalya },
+  { code: 'CDG', city: 'Paris', country: 'France', date: '2027-09-10', days: 8, price: 1450, places: 12, lon: 2.35, lat: 48.86, photo: photos.paris },
+].map((d) => ({
+  ...d,
+  dateLabel: new Date(`${d.date}T00:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+}));
 
 const DEPARTURE_DATES = departures.map((d) => d.date);
 
@@ -32,39 +39,50 @@ const route = [
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 const shortDate = (iso) => `${iso.slice(8, 10)} ${MONTHS[Number(iso.slice(5, 7)) - 1]}`;
 
-/* ---------- Hero: the airplane window ---------- */
+/* ---------- Hero: the airplane window, cycling through real destination views ---------- */
 function WindowView() {
-  const id = useId().replace(/:/g, '');
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const t = setInterval(() => setI((n) => (n + 1) % windowViews.length), 5000);
+    return () => clearInterval(t);
+  }, []);
   return (
-    <div className="relative mx-auto aspect-[3/4] w-full max-w-[14rem] sm:max-w-[18rem] lg:max-w-[22rem]" aria-hidden="true">
-      {/* Cabin wall and bezel */}
-      <div className="absolute inset-0 rounded-[48%/38%] bg-paper-dark shadow-[0_30px_60px_-30px_rgb(var(--shadow)/.55)]" />
-      <div className="absolute inset-[7%] rounded-[46%/36%] bg-bezel shadow-[inset_0_6px_14px_rgb(var(--shadow)/.35)]" />
-      <svg viewBox="0 0 300 400" className="absolute inset-[11%] h-[78%] w-[78%] overflow-hidden rounded-[44%/34%]">
-        <defs>
-          <linearGradient id={`sky${id}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#11161f" />
-            <stop offset=".45" stopColor="#343e54" />
-            <stop offset=".72" stopColor="#a6783a" />
-            <stop offset=".86" stopColor="#ddc387" />
-            <stop offset="1" stopColor="#f5eedc" />
-          </linearGradient>
-        </defs>
-        <rect width="300" height="400" fill={`url(#sky${id})`} />
-        {[...Array(14)].map((_, i) => (
-          <circle key={i} cx={(i * 67) % 290 + 5} cy={(i * 41) % 130 + 10} r={i % 3 ? 0.8 : 1.3} fill="#f6f1e7" opacity={0.7} />
-        ))}
-        <circle cx="200" cy="292" r="26" fill="#f5eedc" opacity=".95" />
-        <path d="M0 300c40-10 70-4 110 2s90 10 190-6v104H0Z" fill="#ece4d3" opacity=".55" />
-        <path d="M0 330c50-12 110-6 160 2s100 6 140-4v72H0Z" fill="#f6f1e7" opacity=".8" />
-        {/* Wing */}
-        <path d="M300 300 150 372l6 10 144-40Z" fill="#1b2230" />
-        <path d="M300 342 156 382h144Z" fill="#11161f" />
-        {/* Window shade, half pulled down */}
-        <rect width="300" height="46" style={{ fill: 'rgb(var(--paper-dark))' }} />
-        <rect y="40" width="300" height="6" style={{ fill: 'rgb(var(--bezel))' }} />
-      </svg>
-    </div>
+    <figure className="relative mx-auto w-full max-w-[15rem] sm:max-w-[19rem] lg:max-w-[23rem]">
+      <div className="relative aspect-[3/4]" aria-hidden="true">
+        {/* Cabin wall and bezel */}
+        <div className="absolute inset-0 rounded-[48%/38%] bg-paper-dark shadow-[0_30px_60px_-30px_rgb(var(--shadow)/.55)]" />
+        <div className="absolute inset-[7%] rounded-[46%/36%] bg-bezel shadow-[inset_0_6px_14px_rgb(var(--shadow)/.35)]" />
+        <div className="absolute inset-[11%] overflow-hidden rounded-[44%/34%] bg-night">
+          {windowViews.map((v, n) => (
+            <img
+              key={v.city}
+              src={v.photo.src}
+              alt=""
+              width={v.photo.width}
+              height={v.photo.height}
+              decoding="async"
+              fetchpriority={n === 0 ? 'high' : 'low'}
+              className={cx(
+                'absolute inset-0 h-full w-full object-cover transition-opacity duration-[1400ms]',
+                n === i ? 'animate-kenburns opacity-100' : 'opacity-0',
+              )}
+            />
+          ))}
+          {/* Drifting clouds and glass glare */}
+          <span className="absolute -left-1/2 top-[18%] h-16 w-[140%] animate-drift rounded-full bg-white/25 blur-2xl" />
+          <span className="absolute -left-1/2 top-[62%] h-10 w-[120%] animate-drift-slow rounded-full bg-white/20 blur-xl" />
+          <span className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
+          {/* Window shade, half pulled down */}
+          <span className="absolute inset-x-0 top-0 h-[11%] border-b-4 border-bezel bg-paper-dark" />
+        </div>
+      </div>
+      <figcaption className="mt-5 flex items-center justify-center gap-3 text-[0.65rem] uppercase tracking-[0.28em] text-primary-500">
+        <span className="h-px w-8 bg-primary-900/25" aria-hidden="true" />
+        Window seat · <span className="text-accent-700" aria-live="polite">{windowViews[i].city}</span>
+        <span className="h-px w-8 bg-primary-900/25" aria-hidden="true" />
+      </figcaption>
+    </figure>
   );
 }
 
@@ -168,11 +186,14 @@ function BoardingPass() {
   );
 }
 
-/* ---------- Departures board ---------- */
+/* ---------- Departures board, with a postcard preview of the hovered row ---------- */
 function DeparturesBoard() {
+  const [ref, visible] = useReveal();
+  const [active, setActive] = useState(departures[0].code);
+  const current = departures.find((d) => d.code === active);
   return (
     <section className="on-night bg-night text-paper" aria-labelledby="board-title">
-      <div className="container-page py-20 sm:py-28">
+      <div ref={ref} className="container-page py-20 sm:py-28">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
             <p className="eyebrow text-accent-300">№ 01 · Departures</p>
@@ -183,37 +204,71 @@ function DeparturesBoard() {
           <p className="max-w-xs text-sm text-primary-300">Every package leaves from Beirut with flights, hotel and transfers included.</p>
         </div>
 
-        <div className="mt-12 border-t border-paper/20" role="table" aria-label="Upcoming departures">
-          <div role="row" className="hidden grid-cols-[6rem_1fr_6rem_6rem_8rem_2rem] gap-4 py-3 text-[0.6rem] uppercase tracking-[0.28em] text-primary-400 md:grid">
-            <span role="columnheader">Date</span>
-            <span role="columnheader">Destination</span>
-            <span role="columnheader">Stay</span>
-            <span role="columnheader">Group</span>
-            <span role="columnheader" className="text-right">From</span>
-            <span role="columnheader"><span className="sr-only">Open</span></span>
+        <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_22rem] xl:grid-cols-[1fr_26rem]">
+          <div className="border-t border-paper/20" role="table" aria-label="Upcoming departures">
+            <div role="row" className="hidden grid-cols-[7.5rem_1fr_5.5rem_6rem_7.5rem] gap-4 py-3 pl-3 text-[0.6rem] uppercase tracking-[0.28em] text-primary-400 md:grid">
+              <span role="columnheader">Date</span>
+              <span role="columnheader">Destination</span>
+              <span role="columnheader">Stay</span>
+              <span role="columnheader">Group</span>
+              <span role="columnheader" className="text-right">From</span>
+            </div>
+            {departures.map((d, n) => (
+              <Link
+                role="row"
+                key={d.code}
+                to={`/search?destination=${encodeURIComponent(d.city)}`}
+                onMouseEnter={() => setActive(d.code)}
+                onFocus={() => setActive(d.code)}
+                className={cx(
+                  'group relative grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-1 border-t border-paper/15 py-5 transition-colors md:grid-cols-[7.5rem_1fr_5.5rem_6rem_7.5rem] md:py-6 md:pl-3',
+                  d.code === active ? 'bg-paper/[0.05]' : 'hover:bg-paper/[0.03]',
+                )}
+              >
+                <span className={cx('absolute inset-y-0 left-0 w-0.5 bg-accent-300 transition-opacity', d.code === active ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
+                <img src={d.photo.src} alt="" width={d.photo.width} height={d.photo.height} loading="lazy" className="row-span-2 h-14 w-14 object-cover md:hidden" />
+                <span role="cell" className="font-mono text-sm tracking-widest text-accent-300 md:text-base">
+                  <FlapText text={shortDate(d.date)} play={visible} delay={n * 180} />
+                </span>
+                <span role="cell" className="col-start-2 flex items-baseline gap-3 md:col-start-auto">
+                  <span className="font-display text-3xl transition-transform duration-300 group-hover:translate-x-1 sm:text-4xl">{d.city}</span>
+                  <FlapText text={d.code} play={visible} delay={n * 180 + 300} className="hidden font-mono text-xs tracking-widest text-primary-400 sm:inline" />
+                </span>
+                <span role="cell" className="hidden text-sm text-primary-200 md:block">{d.days} days</span>
+                <span role="cell" className="hidden text-sm text-primary-200 md:block">{d.places} places</span>
+                <span role="cell" className="col-start-3 row-span-2 row-start-1 text-right md:col-start-auto md:row-span-1 md:row-start-auto md:pr-3">
+                  <span className="font-display text-2xl">{formatPrice(d.price)}</span>
+                  <span className="block text-[0.6rem] uppercase tracking-[0.2em] text-primary-400">per person</span>
+                </span>
+              </Link>
+            ))}
           </div>
-          {departures.map((d) => (
-            <Link
-              role="row"
-              key={d.code}
-              to={`/search?destination=${encodeURIComponent(d.city)}`}
-              className="group grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 border-t border-paper/15 py-5 transition-colors hover:bg-paper/[0.04] md:grid-cols-[6rem_1fr_6rem_6rem_8rem_2rem] md:py-6"
-            >
-              <span role="cell" className="col-start-1 row-start-1 font-mono text-sm tracking-widest text-accent-300 md:col-start-auto md:row-start-auto md:text-base">{shortDate(d.date)}</span>
-              <span role="cell" className="col-span-2 row-start-2 flex items-baseline gap-3 md:col-span-1 md:row-start-auto">
-                <span className="font-display text-3xl transition-transform duration-300 group-hover:translate-x-1 sm:text-4xl">{d.city}</span>
-                <span className="font-mono text-xs tracking-widest text-primary-400">{d.code}</span>
-                <span className="hidden text-xs text-primary-400 lg:inline">· {d.country}</span>
-              </span>
-              <span role="cell" className="hidden text-sm text-primary-200 md:block">{d.days} days</span>
-              <span role="cell" className="hidden text-sm text-primary-200 md:block">{d.places} places</span>
-              <span role="cell" className="col-start-2 row-start-1 text-right md:col-start-auto md:row-start-auto">
-                <span className="font-display text-2xl">{formatPrice(d.price)}</span>
-                <span className="block text-[0.6rem] uppercase tracking-[0.2em] text-primary-400">per person</span>
-              </span>
-              <span role="cell" aria-hidden="true" className="hidden text-accent-300 transition-transform group-hover:translate-x-1 md:block">→</span>
-            </Link>
-          ))}
+
+          {/* Postcard preview of the hovered departure */}
+          <figure className="relative hidden lg:block" aria-hidden="true">
+            <div className="sticky top-28 rotate-[-1.5deg] bg-paper p-3 pb-16 shadow-pop">
+              <div className="relative aspect-[4/5] overflow-hidden bg-paper-dark">
+                {departures.map((d) => (
+                  <img
+                    key={d.code}
+                    src={d.photo.src}
+                    alt=""
+                    width={d.photo.width}
+                    height={d.photo.height}
+                    loading="lazy"
+                    className={cx('absolute inset-0 h-full w-full object-cover transition-all duration-700', d.code === active ? 'scale-100 opacity-100' : 'scale-105 opacity-0')}
+                  />
+                ))}
+              </div>
+              <figcaption className="absolute bottom-5 left-5 right-5 flex items-baseline justify-between gap-3 text-primary-900">
+                <span className="font-display text-2xl italic">Greetings from {current.city}</span>
+                <span className="shrink-0 font-mono text-[0.6rem] tracking-[0.2em] text-primary-500">BEY → {current.code}</span>
+              </figcaption>
+              <div className="absolute -right-10 -top-10">
+                <Seal className="h-28 w-28" />
+              </div>
+            </div>
+          </figure>
         </div>
         <div className="mt-10">
           <Button to="/search" variant="accent">See every departure</Button>
@@ -223,22 +278,52 @@ function DeparturesBoard() {
   );
 }
 
+/* ---------- Route chart ---------- */
+function WhereWeFly() {
+  return (
+    <section className="container-page py-20 sm:py-28" aria-labelledby="map-title">
+      <div className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <p className="eyebrow text-accent-700">№ 02 · Where we fly</p>
+          <h2 id="map-title" className="mt-4 text-4xl sm:text-6xl">
+            Every route starts <em className="text-accent-700">at home</em>
+          </h2>
+        </div>
+        <p className="max-w-xs text-sm text-primary-600">Hover a city to see its route, its next departure and the price from Beirut.</p>
+      </div>
+      <div className="mt-12">
+        <RouteMap destinations={departures} />
+      </div>
+    </section>
+  );
+}
+
 /* ---------- Flight path ---------- */
 function FlightPath() {
+  const [ref, visible] = useReveal();
+  const [motion, setMotion] = useState(false);
+  useEffect(() => setMotion(!window.matchMedia('(prefers-reduced-motion: reduce)').matches), []);
   return (
-    <section className="container-page py-20 sm:py-28" aria-labelledby="route-title">
-      <p className="eyebrow text-accent-700">№ 03 · How booking works</p>
+    <section ref={ref} className="container-page py-20 sm:py-28" aria-labelledby="route-title">
+      <p className="eyebrow text-accent-700">№ 04 · How booking works</p>
       <h2 id="route-title" className="mt-4 max-w-xl text-4xl sm:text-5xl">
         Three stops from <em>here</em> to <em>there</em>
       </h2>
 
       <div className="relative mt-14">
         <svg viewBox="0 0 1000 120" preserveAspectRatio="none" className="absolute inset-x-0 top-0 hidden h-28 w-full text-accent-600 md:block" aria-hidden="true">
-          <path d="M40 100 C 260 -20, 420 -10, 500 60 S 760 140, 960 30" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 8" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          <path id="booking-path" d="M40 100 C 260 -20, 420 -10, 500 60 S 760 140, 960 30" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="2 8" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          {motion && visible && (
+            <circle r="5" fill="currentColor">
+              <animateMotion dur="7s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="spline" keySplines=".45 0 .25 1">
+                <mpath href="#booking-path" />
+              </animateMotion>
+            </circle>
+          )}
         </svg>
         <ol className="relative grid gap-10 border-l border-dashed border-accent-600/50 pl-8 md:grid-cols-3 md:border-0 md:pl-0 md:pt-36">
           {route.map((s, i) => (
-            <li key={s.label} className="relative">
+            <li key={s.label} className={cx('reveal relative', visible && 'is-visible')} style={{ transitionDelay: `${i * 150}ms` }}>
               <span className="absolute -left-[2.45rem] top-1 flex h-4 w-4 items-center justify-center rounded-full border border-accent-600 bg-paper md:hidden">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent-600" />
               </span>
@@ -306,18 +391,22 @@ export default function Home() {
 
       <DeparturesBoard />
 
+      <WhereWeFly />
+
+      <div className="container-page"><div className="rule" /></div>
+
       {/* Principles */}
       <section className="container-page py-20 sm:py-28" aria-labelledby="ways-title">
         <div className="grid gap-12 lg:grid-cols-[1fr_2fr]">
           <div>
-            <p className="eyebrow text-accent-700">№ 02 · The Beyond Borders way</p>
+            <p className="eyebrow text-accent-700">№ 03 · The Beyond Borders way</p>
             <h2 id="ways-title" className="mt-4 text-4xl sm:text-5xl">
               Travel, <em>without</em> the paperwork
             </h2>
           </div>
           <div className="divide-y divide-primary-900/15 border-y border-primary-900/15">
             {principles.map((p) => (
-              <div key={p.n} className="grid grid-cols-[3.5rem_1fr] gap-4 py-7 sm:grid-cols-[5rem_1fr_1.4fr] sm:items-baseline">
+              <div key={p.n} className="grid grid-cols-[3.5rem_1fr] gap-4 py-7 transition-colors hover:bg-primary-900/[0.03] sm:grid-cols-[5rem_1fr_1.4fr] sm:items-baseline">
                 <span className="font-display text-4xl text-accent-700">{p.n}.</span>
                 <h3 className="font-display text-2xl">{p.title}</h3>
                 <p className="col-start-2 text-sm leading-relaxed text-primary-600 sm:col-start-3">{p.text}</p>
@@ -331,23 +420,34 @@ export default function Home() {
 
       <FlightPath />
 
-      {/* Closing */}
-      <section className="border-t border-primary-900/15 bg-paper-dark" aria-labelledby="cta-title">
-        <div className="container-page grid items-center gap-10 py-20 sm:py-24 md:grid-cols-[1fr_auto]">
+      {/* Closing: Beirut, where every trip starts */}
+      <section className="on-night relative isolate overflow-hidden bg-night text-paper" aria-labelledby="cta-title">
+        <img
+          src={photos.beirut.src}
+          alt={photos.beirut.alt}
+          width={photos.beirut.width}
+          height={photos.beirut.height}
+          loading="lazy"
+          className="absolute inset-0 -z-10 h-full w-full object-cover object-[30%_60%]"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-night via-night/80 to-night/10" aria-hidden="true" />
+        <div className="container-page grid items-center gap-10 py-24 sm:py-32 md:grid-cols-[1fr_auto]">
           <div>
-            <p className="eyebrow text-accent-700">Your passport is ready</p>
-            <h2 id="cta-title" className="mt-4 max-w-2xl text-4xl sm:text-6xl">
-              Are <em>you</em>?
+            <p className="eyebrow text-accent-300">Pigeon Rocks, Beirut · Your passport is ready</p>
+            <h2 id="cta-title" className="mt-4 max-w-2xl text-5xl text-paper sm:text-7xl">
+              Are <em className="text-accent-300">you</em>?
             </h2>
-            <p className="mt-5 max-w-md text-primary-700">
-              Create a free account to save your travelers and follow every booking in one place.
+            <p className="mt-5 max-w-md text-primary-200">
+              Every trip starts here, on the Corniche. Create a free account to save your travelers and follow every booking in one place.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button to="/register" size="lg">Create account</Button>
-              <Button to="/search" variant="secondary" size="lg">Browse trips</Button>
+              <Button to="/register" variant="accent" size="lg">Create account</Button>
+              <Button to="/search" size="lg" className="bg-transparent ring-1 ring-inset ring-paper/50 hover:bg-paper hover:text-primary-900">Browse trips</Button>
             </div>
           </div>
-          <Seal className="mx-auto h-44 w-44 sm:h-56 sm:w-56" />
+          <div className="mx-auto rounded-full bg-paper/90 p-2 backdrop-blur">
+            <Seal className="h-40 w-40 sm:h-52 sm:w-52" />
+          </div>
         </div>
       </section>
     </>

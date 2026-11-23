@@ -42,8 +42,17 @@ export default {
       keyframes: {
         'fade-in': { from: { opacity: 0, transform: 'translateY(4px)' }, to: { opacity: 1, transform: 'none' } },
         'pop-in': { from: { opacity: 0, transform: 'translateY(-6px) scale(.98)' }, to: { opacity: 1, transform: 'none' } },
+        // Slow zoom on photos (Ken Burns) and clouds drifting past the airplane window.
+        kenburns: { from: { transform: 'scale(1.02)' }, to: { transform: 'scale(1.14) translate(-1.5%, -1%)' } },
+        drift: { from: { transform: 'translateX(-10%)' }, to: { transform: 'translateX(40%)' } },
       },
-      animation: { 'fade-in': 'fade-in 150ms ease-out', 'pop-in': 'pop-in 180ms cubic-bezier(.2,.8,.2,1)' },
+      animation: {
+        'fade-in': 'fade-in 150ms ease-out',
+        'pop-in': 'pop-in 180ms cubic-bezier(.2,.8,.2,1)',
+        kenburns: 'kenburns 9s ease-out forwards',
+        drift: 'drift 14s linear infinite alternate',
+        'drift-slow': 'drift 22s linear infinite alternate-reverse',
+      },
     },
   },
   plugins: [],

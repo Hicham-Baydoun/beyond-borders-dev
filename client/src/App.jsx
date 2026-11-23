@@ -7,6 +7,7 @@ import DevUi from './pages/DevUi.jsx';
 import Home from './pages/Home.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Confirm from './pages/auth/Confirm.jsx';
+import Credits from './pages/Credits.jsx';
 import Login from './pages/auth/Login.jsx';
 import Register from './pages/auth/Register.jsx';
 
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route path="confirm" element={<Confirm />} />
+        <Route path="credits" element={<Credits />} />
         <Route element={<RequireRole roles={['CUSTOMER']} />}>
           <Route path="my-bookings" element={Soon('My bookings', 'M4 Booking (KAN-9)')} />
         </Route>

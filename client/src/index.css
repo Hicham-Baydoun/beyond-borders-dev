@@ -115,8 +115,12 @@
   .eyebrow { @apply text-xs font-medium uppercase tracking-[0.28em]; }
   /* Hairline rule, like the line under BORDERS in the logo. */
   .rule { @apply h-px w-full bg-primary-900/15; }
+  /* Gentle entrance when a section scrolls into view (see hooks/useReveal.js). */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+  .reveal.is-visible { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
 }
