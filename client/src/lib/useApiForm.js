@@ -9,7 +9,7 @@
 //     <FormInput form={form} name="email" label="Email" />
 //     <FormError form={form} />
 //     <Button type="submit" loading={form.formState.isSubmitting}>Log in</Button>
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mapServerErrors } from './formErrors.js';
@@ -19,9 +19,15 @@ export function useApiForm(schema, defaultValues, options = {}) {
   const [serverError, setServerError] = useState(null); // { message, retry }
 
   // Wraps a submit handler: validates, sends, and maps any API error onto the form.
-  const submit = (onValid) =>
-    form.handleSubmit(async (values) => {
-      setServerError(null);
+  // Editing any field clears a stale server message (for example "Wrong email or password").
+  useEffect(() => {
+    const sub = form.watch(() => setServerError(null));
+    return () => sub.unsubscribe();
+  }, [form]);
+
+  const submit = (onValid) => (event) => {
+    setServerError(null); // before validation, so a failed client check never shows an old server error
+    return form.handleSubmit(async (values) => {
       try {
         await onValid(values);
       } catch (err) {
@@ -31,7 +37,8 @@ export function useApiForm(schema, defaultValues, options = {}) {
         }
         if (mapped.form) setServerError({ message: mapped.form, retry: mapped.retry, status: err?.status, code: err?.details?.code });
       }
-    });
+    })(event);
+  };
 
   return { ...form, submit, serverError, clearServerError: () => setServerError(null) };
 }

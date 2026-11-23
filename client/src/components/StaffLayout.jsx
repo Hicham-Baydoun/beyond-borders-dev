@@ -1,13 +1,13 @@
 // Frame for the agent and admin areas (KAN-82): a side menu built from config/menus.js,
 // collapsing into a drawer under 1024 px. Public pages use Layout.jsx instead.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { roleHome, roleLabel, staffMenus } from '../config/menus.js';
 import { useAuth } from '../lib/auth.jsx';
 import Logo from './Logo.jsx';
 import MaintenanceBanner from './MaintenanceBanner.jsx';
 import SettingsMenu from './SettingsMenu.jsx';
-import { cx } from './ui';
+import { cx, useToast } from './ui';
 
 const paths = {
   home: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
@@ -100,21 +100,51 @@ function Sidebar({ onSignOut }) {
 
 export default function StaffLayout() {
   const { logout } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const [drawer, setDrawer] = useState(false);
+  const drawerRef = useRef(null);
+  const openerRef = useRef(null);
 
   useEffect(() => setDrawer(false), [location.pathname]);
+
+  // Modal drawer: focus moves in, Tab stays inside, the page behind is inert, and focus returns on close.
   useEffect(() => {
     if (!drawer) return undefined;
-    const onKey = (e) => e.key === 'Escape' && setDrawer(false);
+    const panel = drawerRef.current;
+    const focusable = () => [...panel.querySelectorAll('a[href], button:not([disabled])')];
+    focusable()[0]?.focus();
+    const onKey = (e) => {
+      if (e.key === 'Escape') return setDrawer(false);
+      if (e.key !== 'Tab') return undefined;
+      const items = focusable();
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+      return undefined;
+    };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const opener = openerRef.current;
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      opener?.focus();
+    };
   }, [drawer]);
 
   const signOut = async () => {
-    await logout();
-    navigate('/', { replace: true });
+    try {
+      await logout();
+      navigate('/', { replace: true });
+    } catch (err) {
+      toast.error('You are still logged in', `${err.message} Try logging out again.`);
+    }
   };
 
   return (
@@ -130,18 +160,19 @@ export default function StaffLayout() {
 
       {/* Mobile drawer */}
       {drawer && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Staff menu">
-          <button type="button" aria-label="Close menu" className="absolute inset-0 animate-fade-in bg-night/60" onClick={() => setDrawer(false)} />
+        <div ref={drawerRef} className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Staff menu">
+          <button type="button" tabIndex={-1} aria-label="Close menu" className="absolute inset-0 animate-fade-in bg-night/60" onClick={() => setDrawer(false)} />
           <aside className="on-night relative h-full w-72 max-w-[85%] animate-fade-in bg-night shadow-pop">
             <Sidebar onSignOut={signOut} />
           </aside>
         </div>
       )}
 
-      <div className="flex min-w-0 flex-col">
+      <div className="flex min-w-0 flex-col" inert={drawer ? '' : undefined}>
         <MaintenanceBanner />
         <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-primary-900/15 bg-paper/95 px-4 backdrop-blur sm:px-6 lg:px-10">
           <button
+            ref={openerRef}
             type="button"
             className="-ml-2 flex h-11 w-11 items-center justify-center lg:hidden"
             aria-label="Open menu"

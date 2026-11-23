@@ -1,5 +1,6 @@
 // Photo credits. The Creative Commons licences of our photos require naming the author, the licence and the source.
 import { photos } from '../data/photos.js';
+import { Card } from '../components/ui';
 
 export default function Credits() {
   return (
@@ -12,7 +13,8 @@ export default function Credits() {
       </p>
       <ul className="mt-12 grid gap-6 sm:grid-cols-2">
         {Object.entries(photos).map(([key, p]) => (
-          <li key={key} className="border border-primary-900/10 bg-surface p-3">
+          <li key={key}>
+            <Card padded={false} className="h-full p-3">
             <img src={p.src} alt={p.alt} width={p.width} height={p.height} loading="lazy" className="aspect-[3/2] w-full object-cover" />
             <div className="px-1 pb-1 pt-4 text-sm">
               <p className="font-display text-xl text-primary-900">{p.subject}</p>
@@ -22,6 +24,7 @@ export default function Credits() {
                 <a href={p.source} target="_blank" rel="noreferrer" className="text-primary-600 hover:underline">Source on Wikimedia Commons</a>
               </p>
             </div>
+            </Card>
           </li>
         ))}
       </ul>

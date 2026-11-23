@@ -202,18 +202,18 @@ function DeparturesBoard() {
         </div>
 
         <div className="mt-12 grid gap-12 lg:grid-cols-[1fr_22rem] xl:grid-cols-[1fr_26rem]">
-          <div className="border-t border-paper/20" role="table" aria-label="Upcoming departures">
-            <div role="row" className="hidden grid-cols-[7.5rem_1fr_5.5rem_6rem_7.5rem] gap-4 py-3 pl-3 text-[0.6rem] uppercase tracking-[0.28em] text-primary-400 md:grid">
-              <span role="columnheader">Date</span>
-              <span role="columnheader">Destination</span>
-              <span role="columnheader">Stay</span>
-              <span role="columnheader">Group</span>
-              <span role="columnheader" className="text-right">From</span>
+          <div className="border-t border-paper/20">
+            <div aria-hidden="true" className="hidden grid-cols-[7.5rem_1fr_5.5rem_6rem_7.5rem] gap-4 py-3 pl-3 text-[0.6rem] uppercase tracking-[0.28em] text-primary-400 md:grid">
+              <span>Date</span>
+              <span>Destination</span>
+              <span>Stay</span>
+              <span>Group</span>
+              <span className="text-right">From</span>
             </div>
             {departures.map((d, n) => (
               <Link
-                role="row"
                 key={d.code}
+                aria-label={`${d.city}, ${d.country}: ${d.days} days from ${formatPrice(d.price)} per person, departs ${d.dateLabel}`}
                 to={`/search?destination=${encodeURIComponent(d.city)}`}
                 onMouseEnter={() => setActive(d.code)}
                 onFocus={() => setActive(d.code)}
@@ -224,16 +224,16 @@ function DeparturesBoard() {
               >
                 <span className={cx('absolute inset-y-0 left-0 w-0.5 bg-accent-300 transition-opacity', d.code === active ? 'opacity-100' : 'opacity-0')} aria-hidden="true" />
                 <img src={d.photo.src} alt="" width={d.photo.width} height={d.photo.height} loading="lazy" className="row-span-2 h-14 w-14 object-cover md:hidden" />
-                <span role="cell" className="font-mono text-sm tracking-widest text-accent-300 md:text-base">
+                <span className="font-mono text-sm tracking-widest text-accent-300 md:text-base">
                   <FlapText text={shortDate(d.date)} play={visible} delay={n * 180} />
                 </span>
-                <span role="cell" className="col-start-2 flex items-baseline gap-3 md:col-start-auto">
+                <span className="col-start-2 flex items-baseline gap-3 md:col-start-auto">
                   <span className="font-display text-3xl transition-transform duration-300 group-hover:translate-x-1 sm:text-4xl">{d.city}</span>
                   <FlapText text={d.code} play={visible} delay={n * 180 + 300} className="hidden font-mono text-xs tracking-widest text-primary-400 sm:inline" />
                 </span>
-                <span role="cell" className="hidden text-sm text-primary-200 md:block">{d.days} days</span>
-                <span role="cell" className="hidden text-sm text-primary-200 md:block">{d.places} places</span>
-                <span role="cell" className="col-start-3 row-span-2 row-start-1 text-right md:col-start-auto md:row-span-1 md:row-start-auto md:pr-3">
+                <span className="hidden text-sm text-primary-200 md:block">{d.days} days</span>
+                <span className="hidden text-sm text-primary-200 md:block">{d.places} places</span>
+                <span className="col-start-3 row-span-2 row-start-1 text-right md:col-start-auto md:row-span-1 md:row-start-auto md:pr-3">
                   <span className="font-display text-2xl">{formatPrice(d.price)}</span>
                   <span className="block text-[0.6rem] uppercase tracking-[0.2em] text-primary-400">per person</span>
                 </span>

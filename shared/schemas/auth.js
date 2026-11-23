@@ -21,7 +21,8 @@ const register = z.object({
   phone: z
     .string({ required_error: 'Enter your phone number.' })
     .trim()
-    .regex(/^\+?[\d\s()-]{7,20}$/, 'Enter a valid phone number, for example +961 70 123 456.'),
+    .regex(/^\+?[\d\s()-]{7,20}$/, 'Enter a valid phone number, for example +961 70 123 456.')
+    .refine((v) => v.replace(/\D/g, '').length >= 7, 'Enter a phone number with at least 7 digits, for example +961 70 123 456.'),
   password: newPassword,
 });
 

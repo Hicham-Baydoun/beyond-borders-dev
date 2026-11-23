@@ -15,9 +15,9 @@ const LOCK_MINUTES = 15;
 const CONFIRM_HOURS = 24;
 
 const MSG = {
-  duplicate: 'An account with this email already exists. Log in or reset your password.',
-  wrongLogin: 'Wrong email or password.',
-  locked: `Your account is locked for ${LOCK_MINUTES} minutes because of too many failed attempts. Try again later or reset your password.`,
+  duplicate: 'An account with this email already exists. Log in with it instead.',
+  wrongLogin: 'Wrong email or password. Check both and try again.',
+  locked: `Your account is locked for ${LOCK_MINUTES} minutes because of too many failed attempts. Wait ${LOCK_MINUTES} minutes, then try again.`,
   unconfirmed: 'Please confirm your email address first. We can send you a new link.',
   deactivated: 'This account has been deactivated. Contact your administrator.',
   badLink: 'This confirmation link is not valid. Check that you copied the whole link, or request a new one.',
@@ -100,8 +100,9 @@ async function confirmEmail(token) {
   if (record.usedAt) throw conflict(MSG.usedLink);
   const now = clock.now();
   if (record.expiresAt <= now) throw gone(MSG.expiredLink);
-  const ok = await repo.useConfirmToken(record.id, record.customerId, now);
-  if (!ok) throw conflict(MSG.usedLink);
+  const result = await repo.useConfirmToken(record.id, record.customerId, now);
+  // 'not_unconfirmed': already active (another link was used) or deactivated; the link never changes the status.
+  if (result !== 'ok') throw conflict(MSG.usedLink);
   emit(Events.CUSTOMER_CONFIRMED, { customerId: record.customerId });
 }
 
@@ -129,13 +130,14 @@ async function login({ email, password }, meta = {}) {
 
   const passwordOk = account.passwordHash ? await bcrypt.compare(password, account.passwordHash) : false;
   if (!passwordOk) {
-    // A lock that has run out starts a fresh count.
-    const base = account.lockedUntil ? await repo.updateAccount(kind, account.id, { failedLoginCount: 0, lockedUntil: null }) : account;
-    const updated = await repo.addFailedLogin(kind, base.id);
+    // A lock that has run out starts a fresh count. Only clear the exact expired lock we read,
+    // so a lock set meanwhile by a concurrent failed login is never wiped.
+    if (account.lockedUntil) await repo.clearExpiredLock(kind, account.id, account.lockedUntil);
+    const updated = await repo.addFailedLogin(kind, account.id);
     emit(Events.LOGIN_FAILED, { kind, id: account.id, reason: 'WRONG_PASSWORD', ...meta });
     if (updated.failedLoginCount >= MAX_FAILED_LOGINS) {
       const lockedUntil = addMinutes(now, LOCK_MINUTES);
-      await repo.updateAccount(kind, account.id, { lockedUntil });
+      await repo.lockUnlessLocked(kind, account.id, lockedUntil, now);
       emit(Events.ACCOUNT_LOCKED, { kind, id: account.id, lockedUntil, ...meta });
       throw locked(MSG.locked, { lockedUntil });
     }
@@ -143,7 +145,8 @@ async function login({ email, password }, meta = {}) {
   }
 
   if (account.failedLoginCount !== 0 || account.lockedUntil) {
-    await repo.updateAccount(kind, account.id, { failedLoginCount: 0, lockedUntil: null });
+    // Reset only if no active lock appeared since we read the account (a concurrent 5th failure).
+    await repo.resetLoginStateUnlessLocked(kind, account.id, now);
   }
   if (account.status === 'UNCONFIRMED') throw forbidden(MSG.unconfirmed, { code: 'UNCONFIRMED' });
   if (account.status === 'DEACTIVATED') throw forbidden(MSG.deactivated, { code: 'DEACTIVATED' });

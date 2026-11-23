@@ -87,6 +87,12 @@ export default function DateCalendar({ id, value, onChange, marked = [], placeho
   const total = daysIn(view.y, view.m);
   const cells = [...Array(lead).fill(null), ...Array.from({ length: total }, (_, i) => i + 1)];
 
+  // Exactly one day in the visible month takes the Tab stop: the focused day, else the chosen one,
+  // else today, else the first day that is not in the past.
+  const inView = (d) => d && d.startsWith(`${view.y}-${pad(view.m + 1)}-`) && d >= todayIso;
+  const firstOpen = Array.from({ length: total }, (_, i) => iso(view.y, view.m, i + 1)).find((d) => d >= todayIso);
+  const tabStop = [focusIso, value, todayIso].find(inView) ?? firstOpen;
+
   return (
     <div ref={root} className={cx('relative', className)}>
       <button
@@ -150,7 +156,7 @@ export default function DateCalendar({ id, value, onChange, marked = [], placeho
               const isSel = value === dayIso;
               const isToday = dayIso === todayIso;
               const hasTrip = markedSet.has(dayIso);
-              const tabbable = focusIso ? dayIso === focusIso : isSel || (!value && isToday) || (!value && !isToday && d === 1 && !past);
+              const tabbable = dayIso === tabStop;
               return (
                 <button
                   key={dayIso}

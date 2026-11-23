@@ -3,7 +3,7 @@
 const express = require('express');
 const { rateLimit } = require('express-rate-limit');
 const env = require('../../config/env');
-const { publicRoute } = require('../../middleware/auth');
+const { Roles, publicRoute, requireRole } = require('../../middleware/auth');
 const validate = require('../../middleware/validate');
 const schemas = require('./schemas');
 const controller = require('./controller');
@@ -26,6 +26,6 @@ router.post('/auth/confirm', publicRoute, validate({ body: schemas.token }), con
 router.post('/auth/confirm/resend', publicRoute, authLimiter, validate({ body: schemas.resend }), controller.resend);
 router.post('/auth/login', publicRoute, authLimiter, validate({ body: schemas.login }), controller.login);
 router.post('/auth/logout', publicRoute, controller.logout);
-router.get('/auth/me', publicRoute, controller.me);
+router.get('/auth/me', requireRole(Roles.CUSTOMER, Roles.AGENT, Roles.ADMINISTRATOR), controller.me);
 
 module.exports = router;

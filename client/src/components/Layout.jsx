@@ -9,7 +9,7 @@ import { api } from '../lib/api.js';
 import Logo, { LogoMark } from './Logo.jsx';
 import SettingsMenu, { PinIcon } from './SettingsMenu.jsx';
 import { useLocationPref } from '../lib/location.jsx';
-import { Button, cx } from './ui';
+import { Button, cx, useToast } from './ui';
 
 // The public menu for visitors and customers comes from config/menus.js (FR-ACC-04, TC-ACC-04-01).
 // Staff who visit the public site keep the visitor menu plus a link back to their dashboard (their name).
@@ -53,6 +53,7 @@ function ApiStatus() {
 export default function Layout() {
   const { user, logout } = useAuth();
   const { city } = useLocationPref();
+  const toast = useToast();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
@@ -62,8 +63,12 @@ export default function Layout() {
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   const signOut = async () => {
-    await logout();
-    navigate('/', { replace: true });
+    try {
+      await logout();
+      navigate('/', { replace: true });
+    } catch (err) {
+      toast.error('You are still logged in', `${err.message} Try logging out again.`);
+    }
   };
 
   const account = user ? (

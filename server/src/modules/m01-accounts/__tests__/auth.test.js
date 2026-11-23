@@ -86,6 +86,12 @@ describe('FR-ACC-01 registration', () => {
     if (status === 400) expect(res.body.details.password).toBeDefined();
   });
 
+  test('a phone number without digits is rejected', async () => {
+    const res = await request(app).post('/api/v1/auth/register').send(valid({ phone: '-------' }));
+    expect(res.status).toBe(400);
+    expect(res.body.details.phone).toBeDefined();
+  });
+
   test('TC-ACC-01-04 an extra role field never creates staff', async () => {
     const body = valid();
     const staffBefore = await prisma.staffUser.count();
@@ -133,6 +139,27 @@ describe('FR-ACC-02 email confirmation', () => {
     const again = await request(app).post('/api/v1/auth/confirm').send({ token });
     expect(again.status).toBe(409);
     expect(again.body.error).toMatch(/already been used/);
+  });
+
+  test('two simultaneous uses of one link: exactly one succeeds', async () => {
+    const body = valid();
+    await request(app).post('/api/v1/auth/register').send(body).expect(201);
+    const token = tokenFromLastEmail();
+    const [a, b] = await Promise.all([
+      request(app).post('/api/v1/auth/confirm').send({ token }),
+      request(app).post('/api/v1/auth/confirm').send({ token }),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
+    expect((await prisma.customer.findUnique({ where: { email: body.email } })).status).toBe('ACTIVE');
+  });
+
+  test('an old link never reactivates a deactivated account', async () => {
+    const body = valid();
+    await request(app).post('/api/v1/auth/register').send(body).expect(201);
+    const token = tokenFromLastEmail();
+    await prisma.customer.update({ where: { email: body.email }, data: { status: 'DEACTIVATED' } });
+    await request(app).post('/api/v1/auth/confirm').send({ token }).expect(409);
+    expect((await prisma.customer.findUnique({ where: { email: body.email } })).status).toBe('DEACTIVATED');
   });
 
   test('resend for an unknown email still answers 200 and sends nothing', async () => {

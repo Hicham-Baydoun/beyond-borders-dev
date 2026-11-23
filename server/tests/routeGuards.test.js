@@ -44,7 +44,7 @@ describe('TC-ACC-04 role checks', () => {
   test('TC-ACC-04-02 an agent gets 403 on an admin route', async () => {
     const res = await request(app).get('/reports/sales').set('x-test-role', 'AGENT');
     expect(res.status).toBe(403);
-    expect(res.body.error).toBe('Your role cannot use this function.');
+    expect(res.body.error).toBe('Your role cannot use this function. Ask an administrator if you need access.');
   });
   test('TC-ACC-04-03 a customer gets 403 on staff routes', async () => {
     await request(app).get('/customers').set('x-test-role', 'CUSTOMER').expect(403);

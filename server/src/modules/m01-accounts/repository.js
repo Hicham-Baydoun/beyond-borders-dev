@@ -20,17 +20,37 @@ function addFailedLogin(kind, id) {
   return updateAccount(kind, id, { failedLoginCount: { increment: 1 } });
 }
 
+const accounts = (kind) => (kind === 'STAFF' ? prisma.staffUser : prisma.customer);
+
+// The lockout updates below are conditional, so concurrent logins cannot undo each other's lock.
+// Clears an expired lock only if it is still the one we read.
+const clearExpiredLock = (kind, id, expiredLock) =>
+  accounts(kind).updateMany({ where: { id, lockedUntil: expiredLock }, data: { failedLoginCount: 0, lockedUntil: null } });
+
+// Locks the account unless an active lock is already in place.
+const lockUnlessLocked = (kind, id, lockedUntil, now) =>
+  accounts(kind).updateMany({ where: { id, OR: [{ lockedUntil: null }, { lockedUntil: { lte: now } }] }, data: { lockedUntil } });
+
+// After a correct password: reset the counter unless an active lock appeared meanwhile.
+const resetLoginStateUnlessLocked = (kind, id, now) =>
+  accounts(kind).updateMany({
+    where: { id, OR: [{ lockedUntil: null }, { lockedUntil: { lte: now } }] },
+    data: { failedLoginCount: 0, lockedUntil: null },
+  });
+
 const createToken = (data) => prisma.authToken.create({ data });
 const findToken = (tokenHash) => prisma.authToken.findUnique({ where: { tokenHash } });
 
 // Uses the token and activates the customer in one transaction (FR-ACC-02).
-// The usedAt: null condition makes a second, simultaneous use fail instead of activating twice.
+// - usedAt: null makes a second, simultaneous use fail instead of activating twice.
+// - status: UNCONFIRMED means an old link can never reactivate a deactivated account.
+// Returns 'ok', 'used' or 'not_unconfirmed'.
 async function useConfirmToken(tokenId, customerId, now) {
   return prisma.$transaction(async (tx) => {
     const { count } = await tx.authToken.updateMany({ where: { id: tokenId, usedAt: null }, data: { usedAt: now } });
-    if (count === 0) return false;
-    await tx.customer.update({ where: { id: customerId }, data: { status: 'ACTIVE' } });
-    return true;
+    if (count === 0) return 'used';
+    const activated = await tx.customer.updateMany({ where: { id: customerId, status: 'UNCONFIRMED' }, data: { status: 'ACTIVE' } });
+    return activated.count === 1 ? 'ok' : 'not_unconfirmed';
   });
 }
 
@@ -42,6 +62,9 @@ module.exports = {
   createCustomer,
   updateAccount,
   addFailedLogin,
+  clearExpiredLock,
+  lockUnlessLocked,
+  resetLoginStateUnlessLocked,
   createToken,
   findToken,
   useConfirmToken,

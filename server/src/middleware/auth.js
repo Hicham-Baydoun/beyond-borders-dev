@@ -21,7 +21,7 @@ function requireRole(...allowed) {
   return function requireRoleCheck(req, _res, next) {
     const user = req.session?.user;
     if (!user) return next(unauthorized());
-    if (!allowed.includes(user.role)) return next(forbidden('Your role cannot use this function.'));
+    if (!allowed.includes(user.role)) return next(forbidden('Your role cannot use this function. Ask an administrator if you need access.'));
     next();
   };
 }
