@@ -7,3 +7,6 @@ coverage/
 storage/
 *.log
 .DS_Store
+
+# Vite dependency cache
+client/.vite/

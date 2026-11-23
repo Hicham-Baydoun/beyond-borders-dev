@@ -1,19 +1,19 @@
 /** @type {import('tailwindcss').Config} */
-// Brand theme (KAN-81). Use these names in components, never raw hex values.
+// Brand theme (KAN-81, realigned to the logo in F1). Use these names in components, never raw hex values.
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
       colors: {
-        // Deep ocean teal: navigation, primary buttons, links
+        // Logo ink (navy-black): navigation, primary buttons, links, dark sections. primary-900 is the logo colour.
         primary: {
-          50: '#effaf9', 100: '#d6f1ee', 200: '#addfdb', 300: '#7cc7c2', 400: '#4aa9a5',
-          500: '#2f8d8a', 600: '#23716f', 700: '#1f5b5a', 800: '#1c4a4a', 900: '#173c3d', 950: '#0b2526',
+          50: '#f4f6f9', 100: '#e6e9ef', 200: '#cbd1dc', 300: '#a3adbf', 400: '#76839c',
+          500: '#556380', 600: '#424e68', 700: '#343e54', 800: '#262e40', 900: '#1b2230', 950: '#11161f',
         },
-        // Sunset coral: highlights and calls to action on dark backgrounds
+        // Brass gold: highlights and calls to action. accent-700 and darker keep white text above 4.5:1.
         accent: {
-          50: '#fff4ef', 100: '#ffe6db', 200: '#ffc9b2', 300: '#ffa47f', 400: '#fb7a4b',
-          500: '#f25a27', 600: '#df411b', 700: '#b93118', 800: '#932a1a', 900: '#772618',
+          50: '#fbf8f1', 100: '#f5eedc', 200: '#eadbb4', 300: '#ddc387', 400: '#cfa960',
+          500: '#c09245', 600: '#a6783a', 700: '#865e31', 800: '#6f4d2e', 900: '#5d4129',
         },
         sand: { 50: '#fbfaf7', 100: '#f5f2ea', 200: '#ebe4d4' },
         success: { 50: '#ecfdf3', 600: '#16a34a', 700: '#15803d' },
@@ -21,6 +21,8 @@ export default {
         danger: { 50: '#fef2f2', 600: '#dc2626', 700: '#b91c1c' },
       },
       fontFamily: {
+        // Display serif echoes the logo lettering; page and section headings only.
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
         sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {

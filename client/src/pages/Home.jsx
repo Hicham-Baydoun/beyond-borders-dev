@@ -92,7 +92,7 @@ export default function Home() {
             <span className="h-1.5 w-1.5 rounded-full bg-accent-400" aria-hidden="true" />
             Departures open for 2027
           </p>
-          <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-6xl">
+          <h1 className="mt-5 max-w-3xl text-4xl font-semibold leading-[1.1] text-white sm:text-6xl">
             Where dreams <span className="bg-gradient-to-r from-accent-300 to-accent-500 bg-clip-text text-transparent">travel further</span>.
           </h1>
           <p className="mt-5 max-w-xl text-base text-primary-100/80 sm:text-lg">
@@ -108,8 +108,8 @@ export default function Home() {
       <section className="container-page py-16 sm:py-20" aria-labelledby="dest-title">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-accent-600">Popular right now</p>
-            <h2 id="dest-title" className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">Where people are going</h2>
+            <p className="eyebrow text-accent-700">Popular right now</p>
+            <h2 id="dest-title" className="mt-2 text-2xl sm:text-3xl">Where people are going</h2>
           </div>
           <Link to="/search" className="text-sm font-semibold text-primary-700 hover:text-primary-900">
             See all trips <span aria-hidden="true">→</span>
@@ -137,7 +137,7 @@ export default function Home() {
       {/* Why us */}
       <section className="border-y border-slate-200/70 bg-white" aria-labelledby="why-title">
         <div className="container-page py-16 sm:py-20">
-          <h2 id="why-title" className="text-center text-2xl font-bold tracking-tight sm:text-3xl">Travel without the hassle</h2>
+          <h2 id="why-title" className="text-center text-2xl sm:text-3xl">Travel without the hassle</h2>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {features.map((f) => (
               <Card key={f.title} className="text-center">
@@ -152,7 +152,7 @@ export default function Home() {
 
       {/* How it works */}
       <section className="container-page py-16 sm:py-20" aria-labelledby="how-title">
-        <h2 id="how-title" className="text-2xl font-bold tracking-tight sm:text-3xl">How booking works</h2>
+        <h2 id="how-title" className="text-2xl sm:text-3xl">How booking works</h2>
         <ol className="mt-8 grid gap-6 md:grid-cols-3">
           {steps.map((s) => (
             <li key={s.n} className="flex gap-4">
@@ -170,7 +170,7 @@ export default function Home() {
       <section className="container-page pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-700 to-primary-900 px-6 py-12 text-center sm:px-12">
           <div aria-hidden="true" className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-accent-500/30 blur-3xl" />
-          <h2 className="relative text-2xl font-bold text-white sm:text-3xl">Ready when you are</h2>
+          <h2 className="relative text-2xl text-white sm:text-3xl">Ready when you are</h2>
           <p className="relative mx-auto mt-2 max-w-md text-primary-100/80">
             Create a free account to save travelers and track your bookings in one place.
           </p>
