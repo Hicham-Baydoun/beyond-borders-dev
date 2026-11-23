@@ -48,12 +48,14 @@ function WindowView() {
     return () => clearInterval(t);
   }, []);
   return (
-    <figure className="relative mx-auto w-full max-w-[15rem] sm:max-w-[19rem] lg:max-w-[23rem]">
+    <figure className="relative mx-auto w-full max-w-[15rem] [container-type:inline-size] sm:max-w-[19rem] lg:max-w-[23rem]">
       <div className="relative aspect-[3/4]" aria-hidden="true">
         {/* Cabin wall and bezel */}
-        <div className="absolute inset-0 rounded-[48%/38%] bg-paper-dark shadow-[0_30px_60px_-30px_rgb(var(--shadow)/.55)]" />
-        <div className="absolute inset-[7%] rounded-[46%/36%] bg-bezel shadow-[inset_0_6px_14px_rgb(var(--shadow)/.35)]" />
-        <div className="absolute inset-[11%] overflow-hidden rounded-[44%/34%] bg-night">
+        {/* Concentric layers: each corner radius is the outer radius minus the gap (in container width units),
+            so the photo's edge runs exactly parallel to the frame all the way round. */}
+        <div className="absolute inset-0 rounded-[42cqw] bg-paper-dark p-[7cqw] shadow-[0_30px_60px_-30px_rgb(var(--shadow)/.55)]">
+          <div className="h-full w-full rounded-[35cqw] bg-bezel p-[3.5cqw] shadow-[inset_0_6px_14px_rgb(var(--shadow)/.35)]">
+        <div className="relative h-full w-full overflow-hidden rounded-[31.5cqw] bg-night ring-1 ring-inset ring-black/20">
           {windowViews.map((v, n) => (
             <img
               key={v.city}
@@ -73,8 +75,8 @@ function WindowView() {
           <span className="absolute -left-1/2 top-[18%] h-16 w-[140%] animate-drift rounded-full bg-white/25 blur-2xl" />
           <span className="absolute -left-1/2 top-[62%] h-10 w-[120%] animate-drift-slow rounded-full bg-white/20 blur-xl" />
           <span className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
-          {/* Window shade, half pulled down */}
-          <span className="absolute inset-x-0 top-0 h-[11%] border-b-4 border-bezel bg-paper-dark" />
+        </div>
+          </div>
         </div>
       </div>
       <figcaption className="mt-5 flex items-center justify-center gap-3 text-[0.65rem] uppercase tracking-[0.28em] text-primary-500">
