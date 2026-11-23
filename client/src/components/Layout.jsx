@@ -3,34 +3,16 @@
 // UI-02 (KAN-82) adds the staff side menu on top of this.
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { roleHome, useAuth } from '../lib/auth.jsx';
+import { publicMenus, roleHome } from '../config/menus.js';
+import { useAuth } from '../lib/auth.jsx';
 import { api } from '../lib/api.js';
 import Logo, { LogoMark } from './Logo.jsx';
 import SettingsMenu, { PinIcon } from './SettingsMenu.jsx';
 import { useLocationPref } from '../lib/location.jsx';
 import { Button, cx } from './ui';
 
-// The menu shows only the signed-in role's functions (FR-ACC-04, TC-ACC-04-01). The server still checks every request.
-const menus = {
-  VISITOR: [{ to: '/search', label: 'Explore trips' }],
-  CUSTOMER: [
-    { to: '/search', label: 'Explore trips' },
-    { to: '/my-bookings', label: 'My bookings' },
-  ],
-  AGENT: [
-    { to: '/agent/customers', label: 'Customers' },
-    { to: '/agent/bookings', label: 'Bookings' },
-    { to: '/agent/payments', label: 'Payments' },
-    { to: '/agent/documents', label: 'Documents' },
-  ],
-  ADMINISTRATOR: [
-    { to: '/admin/catalog', label: 'Catalog' },
-    { to: '/admin/staff', label: 'Staff' },
-    { to: '/admin/reports', label: 'Reports' },
-    { to: '/admin/audit', label: 'Audit log' },
-    { to: '/admin/cancellation-policy', label: 'Cancellation policy' },
-  ],
-};
+// The public menu for visitors and customers comes from config/menus.js (FR-ACC-04, TC-ACC-04-01).
+// Staff who visit the public site keep the visitor menu plus a link back to their dashboard (their name).
 
 function NavItem({ to, label, onClick, large = false }) {
   return (
@@ -75,7 +57,7 @@ export default function Layout() {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === '/';
-  const links = menus[user?.role] ?? menus.VISITOR;
+  const links = publicMenus[user?.role] ?? publicMenus.VISITOR;
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
 

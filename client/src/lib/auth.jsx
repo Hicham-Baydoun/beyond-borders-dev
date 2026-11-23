@@ -5,8 +5,8 @@ import { api } from './api.js';
 
 const AuthContext = createContext(null);
 
-// Where each role lands after login (TC-ACC-03-01).
-export const roleHome = { CUSTOMER: '/my-bookings', AGENT: '/agent', ADMINISTRATOR: '/admin' };
+// Where each role lands after login (TC-ACC-03-01). Defined with the menus in config/menus.js.
+export { roleHome } from '../config/menus.js';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
