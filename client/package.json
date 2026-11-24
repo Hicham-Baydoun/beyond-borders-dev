@@ -15,13 +15,13 @@
     "react-router-dom": "6.30.6",
     "@bb/shared": "0.1.0",
     "@hookform/resolvers": "3.9.1",
-    "react-hook-form": "7.54.2",
+    "react-hook-form": "7.92.0",
     "zod": "3.23.8"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "4.3.4",
-    "autoprefixer": "10.4.20",
-    "postcss": "8.4.49",
+    "autoprefixer": "10.7.0",
+    "postcss": "8.5.33",
     "tailwindcss": "3.4.15",
     "vite": "5.4.21"
   }
