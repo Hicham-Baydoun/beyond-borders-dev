@@ -9,6 +9,9 @@
 #
 # One service awake all month uses about 744 of Render's 750 free hours, so this only fits one free service.
 # GitHub may delay scheduled runs by a few minutes at busy times; that is fine for this purpose.
+# GitHub disables scheduled workflows in public repos after 60 days without repository activity.
+# Normal team pushes prevent that; if the site starts sleeping again, re-enable it in the Actions tab.
+# Render's own health check uses /api/v1/health/live (no database), see render.yaml.
 name: Keep site awake
 
 on:

@@ -40,7 +40,11 @@ function createApp() {
 
   const api = express.Router();
 
-  // Monitored by Uptime Kuma (NFR-AVA-01)
+  // Liveness: is the server process up? No database query, so Render's frequent health checks
+  // (render.yaml healthCheckPath) never keep the free Neon database awake.
+  api.get('/health/live', (_req, res) => res.json({ status: 'ok' }));
+
+  // Full health including the database. Monitored by Uptime Kuma (NFR-AVA-01); used by the site footer.
   api.get('/health', async (_req, res) => {
     try {
       await prisma.$queryRaw`SELECT 1`;

@@ -7,7 +7,9 @@ services:
     plan: free
     region: frankfurt # closest free region to Lebanon
     autoDeploy: true # every merge to main redeploys
-    healthCheckPath: /api/v1/health
+    # Liveness only (no database query): Render calls this every few seconds, and /api/v1/health would
+    # keep the free Neon database awake around the clock.
+    healthCheckPath: /api/v1/health/live
     # --include=dev: Vite and Prisma CLI are dev dependencies but are needed to build.
     # migrate deploy only applies migrations already committed in server/prisma/migrations.
     buildCommand: >-

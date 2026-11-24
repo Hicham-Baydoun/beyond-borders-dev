@@ -13,6 +13,15 @@ test('GET /api/v1/health answers', async () => {
   expect(res.body).toHaveProperty('status');
 });
 
+test('GET /api/v1/health/live answers without the database', async () => {
+  const spy = jest.spyOn(prisma, '$queryRaw');
+  const res = await request(app).get('/api/v1/health/live');
+  expect(res.status).toBe(200);
+  expect(res.body).toEqual({ status: 'ok' });
+  expect(spy).not.toHaveBeenCalled();
+  spy.mockRestore();
+});
+
 test('unknown route returns a JSON 404', async () => {
   const res = await request(app).get('/api/v1/does-not-exist');
   expect(res.status).toBe(404);
