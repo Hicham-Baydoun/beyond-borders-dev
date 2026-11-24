@@ -1,5 +1,7 @@
 # Keeps the free Render service awake, so visitors never see Render's "service waking up" page.
-# Render's free plan sleeps after 15 minutes without traffic; this pings every 10 minutes.
+# Render's free plan sleeps after 15 minutes without traffic; this pings every 5 minutes, so even one
+# skipped scheduled run (GitHub may drop some) leaves a 10-minute gap, still under the 15-minute limit.
+# It runs at :02, :07, :12 ... to avoid the busy start of each hour.
 #
 # It fetches a small static file on purpose, NOT /api/v1/health: the health check queries the database,
 # and pinging it would keep the free Neon database awake around the clock and use up its monthly compute hours.
@@ -11,7 +13,7 @@ name: Keep site awake
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "2-59/5 * * * *"
   workflow_dispatch:
 
 permissions: {}
