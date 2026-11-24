@@ -31,7 +31,7 @@ console.log(`
 ------------- copy everything below this line -------------
 Beyond Borders dev setup (keep this private, do not post it in the group repo):
 
-1. Install Node.js 20+ and Git
+1. Install Node.js 22.12 or newer (or 20.19 or newer within 20.x) and Git
    Windows: winget install OpenJS.NodeJS.LTS Git.Git
    Mac:     https://nodejs.org  (Git comes with: xcode-select --install)
 2. git clone https://github.com/Hicham-Baydoun/beyond-borders-dev.git

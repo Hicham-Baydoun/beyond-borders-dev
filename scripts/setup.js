@@ -147,7 +147,7 @@ async function main() {
   // Vite 8 needs Node 20.19+ (20.x) or 22.12+ (21.x is not supported).
   const [major, minor] = process.versions.node.split('.').map(Number);
   const supported = (major === 20 && minor >= 19) || (major === 22 && minor >= 12) || major >= 23;
-  if (!supported) fail(`Node.js ${process.versions.node} is not supported. Install the current LTS (Node 22.12 or newer, or 20.19 or newer) from https://nodejs.org`);
+  if (!supported) fail(`Node.js ${process.versions.node} is not supported. Install Node.js 22.12 or newer (or 20.19 or newer within 20.x) from https://nodejs.org`);
   console.log(`  Node.js ${process.versions.node} ${green('OK')}`);
   if (!hasCommand('git')) fail('Git is not installed. Windows: winget install Git.Git   Mac: xcode-select --install');
   console.log(`  Git ${green('OK')}`);
