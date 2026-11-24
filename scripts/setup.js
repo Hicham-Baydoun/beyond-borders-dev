@@ -144,8 +144,10 @@ async function main() {
   console.log(bold('\nBeyond Borders (BBTMS) - team setup\n'));
 
   step(1, 'Checking tools');
-  const major = Number(process.versions.node.split('.')[0]);
-  if (major < 20) fail(`Node.js ${process.versions.node} is too old. Install Node 20 or newer from https://nodejs.org`);
+  // Vite 8 needs Node 20.19+ (20.x) or 22.12+ (21.x is not supported).
+  const [major, minor] = process.versions.node.split('.').map(Number);
+  const supported = (major === 20 && minor >= 19) || (major === 22 && minor >= 12) || major >= 23;
+  if (!supported) fail(`Node.js ${process.versions.node} is not supported. Install Node.js 22.12 or newer (or 20.19 or newer within 20.x) from https://nodejs.org`);
   console.log(`  Node.js ${process.versions.node} ${green('OK')}`);
   if (!hasCommand('git')) fail('Git is not installed. Windows: winget install Git.Git   Mac: xcode-select --install');
   console.log(`  Git ${green('OK')}`);

@@ -54,7 +54,7 @@ Seed logins (Table 33): admin `fadi.aoun@bbtravel.test` / `Admin#2027`, agent `n
 
 The whole team uses one free hosted PostgreSQL database on Neon, so everyone sees the same seed data and each other's changes.
 
-**New teammate:** install Node.js 20+ and Git, clone the repo, then run one command:
+**New teammate:** install Node.js 22.12 or newer (or 20.19 or newer within 20.x) and Git, clone the repo, then run one command:
 
 ```bash
 npm run setup
