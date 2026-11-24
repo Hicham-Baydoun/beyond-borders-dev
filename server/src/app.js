@@ -36,13 +36,14 @@ function createApp() {
 
   // Keep the raw body: the payment webhook needs it to check the gateway signature (FR-PAY-03).
   app.use(express.json({ limit: '1mb', verify: (req, _res, buf) => { req.rawBody = buf; } }));
+  // Liveness: is the server process up? Registered before sessions and with no database query, so
+  // Render's frequent health checks (render.yaml healthCheckPath) never wake the free Neon database,
+  // even if a request carries a session cookie.
+  app.get('/api/v1/health/live', (_req, res) => res.json({ status: 'ok' }));
+
   app.use(sessionMiddleware);
 
   const api = express.Router();
-
-  // Liveness: is the server process up? No database query, so Render's frequent health checks
-  // (render.yaml healthCheckPath) never keep the free Neon database awake.
-  api.get('/health/live', (_req, res) => res.json({ status: 'ok' }));
 
   // Full health including the database. Monitored by Uptime Kuma (NFR-AVA-01); used by the site footer.
   api.get('/health', async (_req, res) => {
